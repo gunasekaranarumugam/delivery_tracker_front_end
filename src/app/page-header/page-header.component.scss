@@ -1,0 +1,33 @@
+.page-header {
+  position: relative;
+  width: 100%;
+  height: 100px;
+  background-image: url('https://www.bing.com/images/search?view=detailV2&ccid=45XK857J&id=640E4F5CAFEB76AAF7D919A74EE3572DF516F04E&thid=OIP.45XK857JlLX-fVQuSXippgHaE7&mediaurl=https%3a%2f%2fimg.freepik.com%2ffree-photo%2fplain-smooth-green-wall-texture_53876-129746.jpg&exph=417&expw=626&q=plain+colour+background+images&FORM=IRPRST&ck=480DEA8BB0B378E4DBC5A38464B1B219&selectedIndex=12&itb=0');
+  background-size: cover;
+  background-position: center;
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+  margin-bottom: 10px;
+}
+
+.overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(to right, rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.2));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.page-title {
+  color: #fff;
+  font-size: 2.2rem;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 1px;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+}

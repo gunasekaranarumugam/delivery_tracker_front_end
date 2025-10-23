@@ -1,0 +1,68 @@
+<app-page-header></app-page-header>
+
+<div class="layout">
+  <app-sidebar></app-sidebar>
+  <div class="content">
+    <div class="card">
+      <div class="card-header">
+        <h2>User</h2>
+        <button class="btn-add" (click)="openAddForm()">+ Add New</button>
+      </div>
+
+      <table class="table">
+        <thead>
+        <tr>
+          <th>ID</th>
+          <th>Full Name</th>
+          <th>email</th>
+          <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let user of users">
+          <td>{{ user.id }}</td>
+          <td>{{ user.fullname }}</td>
+          <td>{{ user.email }}</td>
+          <td>
+            <button class="btn-edit" (click)="editUser(user)">Edit</button>
+            <button class="btn-delete" (click)="openDeletePopup(user)">Delete</button>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Add New User Unit Form -->
+    <div class="modal" *ngIf="showForm">
+      <div class="modal-content">
+        <h3>{{ editMode ? 'Edit User' : 'Add New User' }}</h3>
+        <form (ngSubmit)="saveUser()">
+
+          <label>fullname:</label>
+          <input type="text" [(ngModel)]="newUser.fullname" name="fullname" required>
+
+          <label>email:</label>
+          <input type="email" [(ngModel)]="newUser.email" name="email" required>
+
+          <div class="form-buttons">
+            <button type="submit" class="btn-save">
+              {{ editMode ? 'Update' : 'Save' }}
+            </button>
+            <button type="button" class="btn-cancel" (click)="cancel()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal" *ngIf="showDeletePopup">
+      <div class="modal-content">
+        <h3>Delete Business Unit</h3>
+        <p>Are you sure you want to delete <strong>{{ selectedUser?.fullname }}</strong>?</p>
+        <div class="form-buttons">
+          <button class="btn-delete" (click)="confirmDelete()">Yes, Delete</button>
+          <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
