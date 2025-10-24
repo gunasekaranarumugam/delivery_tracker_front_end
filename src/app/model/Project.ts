@@ -1,0 +1,1 @@
+export interface Project{id: string; buId: string; name: string; description?: string; projectManager?:string; craetedat:  string; baselinestart:string; baselineend:string; plannedStart?: string; plannedEnd?: string;}

@@ -1,6 +1,7 @@
 import {Component, inject, OnInit} from '@angular/core';
 import {DataService} from "../../data.service";
 import {BU} from "../../model/bu";
+import {User} from "../../model/User";
 
 @Component({
   selector: 'app-businessunit',

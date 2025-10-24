@@ -9,6 +9,9 @@ import {FormsModule} from "@angular/forms";
 import { BusinessunitComponent } from './BU/businessunit/businessunit.component';
 import { SidebarComponent } from './sidebar/sidebar.component';
 import { UserComponent } from './BU/User/user.component';
+import { ProjectComponent } from './project/project.component';
+import {NgSelectModule} from "@ng-select/ng-select";
+import { DeliverableComponent } from './deliverable/deliverable.component';
 
 
 @NgModule({
@@ -18,12 +21,15 @@ import { UserComponent } from './BU/User/user.component';
     PageHeaderComponent,
     BusinessunitComponent,
     SidebarComponent,
-    UserComponent
+    UserComponent,
+    ProjectComponent,
+    DeliverableComponent
   ],
   imports: [
     BrowserModule,
     AppRoutingModule,
-    FormsModule
+    FormsModule,
+    NgSelectModule
   ],
   providers: [],
   bootstrap: [AppComponent]
