@@ -17,7 +17,8 @@ const routes: Routes = [
   {path:'deliverable',component:DeliverableComponent},
   {path:'tasks',component:TaskComponent},
   {path:'task_issue',component:IssueComponent},
-  {path:'daily_status_report' , component:TimesheetComponent}
+  {path:'daily_status_report' , component:TimesheetComponent},
+  { path: '', redirectTo: 'login', pathMatch: 'full' },
 ];
 
 @NgModule({

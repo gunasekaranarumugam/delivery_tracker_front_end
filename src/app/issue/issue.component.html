@@ -108,8 +108,8 @@
 
     <div class="modal" *ngIf="showDeletePopup">
       <div class="modal-content">
-        <h3>Delete Business Unit</h3>
-        <p>Are you sure you want to delete <strong>{{ selectedIssue?.id }}</strong>?</p>
+        <h3>Delete Issue</h3>
+        <p>Are you sure you want to delete <strong>{{ selectedIssue?.issuetitle }}</strong>?</p>
         <div class="form-buttons">
           <button class="btn-delete" (click)="confirmDelete()">Yes, Delete</button>
           <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>

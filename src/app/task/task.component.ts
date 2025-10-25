@@ -47,7 +47,8 @@ export class TaskComponent implements OnInit {
   }
 
   cancel() {
-    this.showForm = false;
+    this.showForm = false
+    this.showIssue=false;
     this.selectedId;
     this.newTask = {
       deliverableId: '', taskType: '', taskTitle: '', taskDescription: '',
