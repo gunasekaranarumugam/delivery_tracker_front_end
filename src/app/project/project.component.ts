@@ -102,14 +102,4 @@ export class ProjectComponent implements OnInit{
     this.showDeletePopup = false;
     this.selectedProject = null;
   }
-
-  searchText: string = '';
-  filteredUsers = [...this.userList];
-
-  filterUsers() {
-    const text = this.searchText.toLowerCase();
-    this.filteredUsers = this.userList.filter(u =>
-      u.fullname.toLowerCase().includes(text)
-    );
-  }
 }

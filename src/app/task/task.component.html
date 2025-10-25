@@ -1,0 +1,197 @@
+<app-page-header></app-page-header>
+
+<div class="layout">
+  <app-sidebar></app-sidebar>
+  <div class="content">
+    <div class="card">
+      <div class="card-header">
+        <h2>Task</h2>
+        <button class="btn-add" (click)="openAddForm()">+ Add New</button>
+      </div>
+
+      <div class="table-container">
+        <table class="table">
+          <thead>
+          <tr>
+            <th>Deliverable Name</th>
+            <th>Task Type</th>
+            <th>Task Title</th>
+            <th>Task Description</th>
+            <th>Assignee</th>
+            <th>Reviewer</th>
+            <th>Priority</th>
+            <th>Planned Start Date</th>
+            <th>Planned End Date</th>
+            <th>Estimate Hours</th>
+            <th>Action</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let task of tasks">
+            <td>{{ task.deliverableId }}</td>
+            <td>{{task.taskType}}</td>
+            <td>{{task.taskTitle}}</td>
+            <td>{{task.taskDescription}}</td>
+            <td>{{task.assignee}}</td>
+            <td>{{task.reviewer}}</td>
+            <td [ngStyle]="{
+                'color': task.priority === 'High' ? 'red' :
+                 task.priority === 'Medium' ? 'orange' :
+                 task.priority === 'Low' ? 'green' : 'black'
+            }">
+              {{ task.priority || 'null' }}
+            </td>
+            <td>{{ task.planStartDate }}</td>
+            <td>{{ task.planEndDate }}</td>
+            <td>{{ task.estimateHours +' hrs' }}</td>
+
+            <td>
+              <button class="btn-edit" (click)="editTask(task)">Edit</button>
+              <button class="btn-delete" (click)="openDeletePopup(task)">Delete</button>
+              <button class="btn-issue" (click)="addIssue(task)">Issue</button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Add New User Unit Form -->
+    <div class="modal" *ngIf="showForm">
+      <div class="modal-content">
+        <h3>{{ editMode ? 'Edit Task' : 'Add New Task' }}</h3>
+        <form (ngSubmit)="saveTask()">
+
+          <label>Deliverable Name:</label>
+          <ng-select class="ngitem"
+                     [(ngModel)]="newTask.deliverableId"
+                     [items]="deliverableList"
+                     name="title"
+                     bindLabel="title"
+                     bindValue="title"
+                     [searchable]="true"
+          ></ng-select>
+
+          <label>Type:</label>
+          <select [(ngModel)]="newTask.taskType" name="taskType" class="form-select">
+            <option [ngValue]="null"> Select Task Type </option>
+            <option value="Design">Design</option>
+            <option value="Develop">Develop</option>
+            <option value="Test">Test</option>
+          </select>
+
+          <label>Task Title:</label>
+          <input type="text" [(ngModel)]="newTask.taskTitle" name="title" required>
+
+          <label>Task Description:</label>
+          <input type="text" [(ngModel)]="newTask.taskDescription" name="description" required>
+
+          <label>Assinee:</label>
+          <ng-select class="ngitem"
+                     [(ngModel)]="newTask.assignee"
+                     [items]="userList"
+                     name="fullname"
+                     bindLabel="fullname"
+                     bindValue="fullname"
+                     [searchable]="true"
+          ></ng-select>
+
+
+          <label>Reviewer:</label>
+          <ng-select class="ngitem"
+                     [(ngModel)]="newTask.reviewer"
+                     [items]="userList"
+                     name="fullname"
+                     bindLabel="fullname"
+                     bindValue="fullname"
+                     [searchable]="true"
+          ></ng-select>
+
+
+          <label>Priority:</label>
+          <select [(ngModel)]="newTask.priority" name="priority" class="form-select">
+            <option [ngValue]="null"> Select Priority </option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+
+          <label>Plan Start Date:</label>
+          <input type="date" [(ngModel)]="newTask.planStartDate" name="plantostartdate" required >
+
+          <label>Plan End Date:</label>
+          <input type="date" [(ngModel)]="newTask.planEndDate" name="plantoenddate" required>
+
+          <label>Estimate hours:</label>
+          <input type="number" [(ngModel)]="newTask.estimateHours" min="0" step="0.5" name="estimateHourse" required>
+
+          <div class="form-buttons">
+            <button type="submit" class="btn-save">
+              {{ editMode ? 'Update' : 'Save' }}
+            </button>
+            <button type="button" class="btn-cancel" (click)="cancel()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal" *ngIf="showIssue">
+      <div class="modal-content">
+        <h3>{{ 'Add Issue' }}</h3>
+        <form (ngSubmit)="saveIssue()">
+
+          <label>Issue Title:</label>
+          <input type="text" [(ngModel)]="newIssue.issuetitle" name="title" required>
+
+          <label>Issue Description:</label>
+          <input type="text" [(ngModel)]="newIssue.issuedescription" name="description" required>
+
+          <label>Action Owner:</label>
+          <ng-select class="ngitem"
+                     [(ngModel)]="newIssue.actionOwner"
+                     [items]="userList"
+                     name="fullname"
+                     bindLabel="fullname"
+                     bindValue="fullname"
+                     [searchable]="true"
+          ></ng-select>
+
+          <label>Priority:</label>
+          <select [(ngModel)]="newIssue.priority" name="priority" class="form-select">
+            <option [ngValue]="null"> Select Priority </option>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+
+          <label>Status:</label>
+          <select [(ngModel)]="newIssue.status" name="staus" class="form-select">
+            <option [ngValue]="null"> Select status</option>
+            <option value="Open">Open</option>
+            <option value="In progress">In progress</option>
+            <option value="Resolved">Resolved</option>
+            <option value="Closed">Closed</option>
+          </select>
+
+
+          <div class="form-buttons">
+            <button type="submit" class="btn-save">Save
+            </button>
+            <button type="button" class="btn-cancel" (click)="cancel()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal" *ngIf="showDeletePopup">
+      <div class="modal-content">
+        <h3>Delete Business Unit</h3>
+        <p>Are you sure you want to delete <strong>{{ selectedTask?.id }}</strong>?</p>
+        <div class="form-buttons">
+          <button class="btn-delete" (click)="confirmDelete()">Yes, Delete</button>
+          <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

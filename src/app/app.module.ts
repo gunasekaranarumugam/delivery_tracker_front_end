@@ -12,6 +12,9 @@ import { UserComponent } from './BU/User/user.component';
 import { ProjectComponent } from './project/project.component';
 import {NgSelectModule} from "@ng-select/ng-select";
 import { DeliverableComponent } from './deliverable/deliverable.component';
+import { TaskComponent } from './task/task.component';
+import { IssueComponent } from './issue/issue.component';
+import { TimesheetComponent } from './timesheet/timesheet.component';
 
 
 @NgModule({
@@ -23,7 +26,10 @@ import { DeliverableComponent } from './deliverable/deliverable.component';
     SidebarComponent,
     UserComponent,
     ProjectComponent,
-    DeliverableComponent
+    DeliverableComponent,
+    TaskComponent,
+    IssueComponent,
+    TimesheetComponent
   ],
   imports: [
     BrowserModule,
