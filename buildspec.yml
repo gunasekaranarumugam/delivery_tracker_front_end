@@ -29,5 +29,5 @@ phases:
 artifacts:
   files:
     - '**/*'
-  base-directory: dist/deliverytrackerfrontend  # 🔹 Replace this with your real folder name
+  base-directory: dist/delivery_tracker_front_end  # 🔹 Replace this with your real folder name
   discard-paths: no
