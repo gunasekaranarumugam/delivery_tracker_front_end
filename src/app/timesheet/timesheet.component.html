@@ -1,0 +1,116 @@
+<app-page-header></app-page-header>
+
+<div class="layout">
+  <app-sidebar></app-sidebar>
+  <div class="content">
+    <div class="card">
+      <div class="card-header">
+        <h2>Daily Status Report</h2>
+        <button class="btn-add" (click)="openAddForm()">+ Add New</button>
+      </div>
+
+      <div class="table-container">
+        <table class="table">
+          <thead>
+          <tr>
+            <th>Task Name</th>
+            <th>Employee</th>
+            <th>Work Date</th>
+            <th>Progress Percentage</th>
+            <th>Remarks</th>
+            <th>Action</th>
+          </tr>
+          </thead>
+          <tbody>
+          <tr *ngFor="let timesheet of timesheets">
+            <td>{{ timesheet.taskid}}</td>
+            <td>{{timesheet.employee}}</td>
+            <td>{{timesheet.workDate}}</td>
+            <td>{{timesheet.progressPercentage +' %'}}</td>
+            <td>{{ timesheet.remark }}</td>
+            <td>
+              <button class="btn-edit" (click)="editUser(timesheet)">Edit</button>
+              <button class="btn-delete" (click)="openDeletePopup(timesheet)">Delete</button>
+            </td>
+          </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Add New User Unit Form -->
+    <div class="modal" *ngIf="showForm">
+      <div class="modal-content">
+        <h3>{{ editMode ? 'Edit Daily Status Report' : 'Add New Daily Status Report' }}</h3>
+        <form (ngSubmit)="saveTimesheet()">
+
+          <label>Task Name:</label>
+          <ng-select class="ngitem"
+                     [(ngModel)]="newTimesheet.taskid"
+                     [items]="taskList"
+                     name="taskTitle"
+                     bindLabel="taskTitle"
+                     bindValue="taskTitle"
+                     [searchable]="true"
+          ></ng-select>
+
+          <label>Employee:</label>
+          <ng-select class="ngitem"
+                     [(ngModel)]="newTimesheet.employee"
+                     [items]="userList"
+                     name="fullname"
+                     bindLabel="fullname"
+                     bindValue="fullname"
+                     [searchable]="true"
+          ></ng-select>
+
+          <label>Work Date:</label>
+          <input type="Date" [(ngModel)]="newTimesheet.workDate" name="workdate" required>
+
+
+
+          <!--          <label>Delivery Manager:</label>-->
+          <!--          <ng-select class="ngitem"-->
+          <!--                     [(ngModel)]="newProject.projectManager"-->
+          <!--                     [items]="userList"-->
+          <!--                     name="projectManager"-->
+          <!--                     bindLabel="fullname"-->
+          <!--                     bindValue="fullname"-->
+          <!--                     [searchable]="true"-->
+          <!--          >-->
+          <!--          </ng-select>-->
+
+          <!--          <label>Baseline start date:</label>-->
+          <!--          <input type="date" [(ngModel)]="newProject.baselinestart" name="baselinestartdate" required >-->
+
+          <!--          <label>Baseline End date:</label>-->
+          <!--          <input type="date" [(ngModel)]="newProject.baselineend" name="baselineenddate" required >-->
+
+          <label>Progress Percentage:</label>
+          <input type="number" [(ngModel)]="newTimesheet.progressPercentage" name="progressPercentage" required >
+
+          <label>Remarks:</label>
+          <input type="string" [(ngModel)]="newTimesheet.remark" name="remark" required>
+
+          <div class="form-buttons">
+            <button type="submit" class="btn-save">
+              {{ editMode ? 'Update' : 'Save' }}
+            </button>
+            <button type="button" class="btn-cancel" (click)="cancel()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <div class="modal" *ngIf="showDeletePopup">
+      <div class="modal-content">
+        <h3>Delete Timesheet</h3>
+        <p>Are you sure you want to delete <strong>{{ selectedTimesheet?.id }}</strong>?</p>
+        <div class="form-buttons">
+          <button class="btn-delete" (click)="confirmDelete()">Yes, Delete</button>
+          <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

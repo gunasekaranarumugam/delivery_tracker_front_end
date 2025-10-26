@@ -1,0 +1,45 @@
+<app-page-header></app-page-header>
+
+<div class="login-wrapper">
+  <div class="login-card">
+    <div class="login-header">
+      <h2>Welcome 👋</h2>
+      <p>Please sign in to continue</p>
+    </div>
+
+    <form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="login-form">
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          id="username"
+          name="username"
+          [(ngModel)]="username"
+          placeholder="Enter your username"
+          required
+        />
+      </div>
+
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          name="password"
+          type="password"
+          [(ngModel)]="password"
+          placeholder="Enter your password"
+          required
+        />
+      </div>
+
+      <button type="submit" [disabled]="!loginForm.valid">Login</button>
+
+      <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+    </form>
+
+<!--    <div class="login-footer">-->
+<!--      <p>Forgot your password? <a href="#">Reset here</a></p>-->
+<!--    </div>-->
+  </div>
+</div>
+
+
