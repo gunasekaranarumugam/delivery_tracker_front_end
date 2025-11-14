@@ -2,115 +2,399 @@
 
 <div class="layout">
   <app-sidebar></app-sidebar>
+
   <div class="content">
     <div class="card">
+      <!-- Card Header -->
       <div class="card-header">
-        <h2>Daily Status Report</h2>
-        <button class="btn-add" (click)="openAddForm()">+ Add New</button>
+        <h2>Time Sheets</h2>
+        <button class="btn-cancel" (click)="showAddForm = true">+ Add New</button>
+       
       </div>
 
-      <div class="table-container">
+      <!-- Loading/Error -->
+      <div *ngIf="timesheetLoading()" class="loading">Loading Timesheets...</div>
+      <div *ngIf="timesheetError()" class="error">Error: Could not load data.</div>
+
+      <!-- Timesheet Table -->
+      <div class="table-container" *ngIf="!timesheetLoading()">
         <table class="table">
           <thead>
-          <tr>
-            <th>Task Name</th>
-            <th>Employee</th>
-            <th>Work Date</th>
-            <th>Progress Percentage</th>
-            <th>Remarks</th>
-            <th>Action</th>
-          </tr>
+            <tr>
+              <th *ngFor="let col of columns">
+                <div class="th-container">
+                  <span>{{ columnLabels[col] || (col.replace('_', ' ') | titlecase) }}</span>
+                  <div class="filter-wrapper">
+                    <button class="filter-btn" (click)="toggleFilter(col)">
+                      <span class="arrow" [class.open]="activeFilter === col">▼</span>
+                    </button>
+
+                    <div class="filter-dropdown" *ngIf="activeFilter === col">
+                      <ul>
+                        <li *ngFor="let option of getUniqueOptions(col)">
+                          <label>
+                            <input
+                              type="checkbox"
+                              [checked]="isSelected(col, option)"
+                              (change)="toggleSelection(col, option)"
+                            />
+                            {{ option || '(Empty)' }}
+                          </label>
+                        </li>
+                      </ul>
+                      <div class="filter-actions">
+                        <button *ngIf="hasActiveFilters" class="btn-cancel small" (click)="clearAllFilters()">Clear All</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </th>
+              <th>Action</th>
+            </tr>
           </thead>
+
           <tbody>
-          <tr *ngFor="let timesheet of timesheets">
-            <td>{{ timesheet.taskid}}</td>
-            <td>{{timesheet.employee}}</td>
-            <td>{{timesheet.workDate}}</td>
-            <td>{{timesheet.progressPercentage +' %'}}</td>
-            <td>{{ timesheet.remark }}</td>
-            <td>
-              <button class="btn-edit" (click)="editUser(timesheet)">Edit</button>
-              <button class="btn-delete" (click)="openDeletePopup(timesheet)">Delete</button>
-            </td>
-          </tr>
+            <tr *ngFor="let ts of filteredTimesheets">
+              <td>{{ ts.business_unit_name }}</td>
+              <td>{{ ts.business_unit_head_name }}</td>
+              <td>{{ ts.project_name }}</td>
+              <td>{{ ts.delivery_manager_name }}</td>
+              <td>{{ ts.deliverable_name }}</td>
+              <td>{{ ts.task_name }}</td>
+              <td>{{ ts.action_date }}</td>
+              <td>{{ ts.progress }}%</td>
+              <td>{{ ts.remarks }}</td>
+              <td>{{ ts.created_at }}</td>
+              <td>{{ ts.created_by_name }}</td>
+              <td>{{ ts.updated_at || 'N/A' }}</td>
+              <td>{{ ts.updated_by_name || 'N/A' }}</td>
+              <td>
+                <button class="btn-edit" (click)="openEditForm(ts)">Edit</button>
+                <button class="btn-delete" (click)="openDeletePopup(ts)">Archive</button>
+              </td>
+            </tr>
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Add New User Unit Form -->
-    <div class="modal" *ngIf="showForm">
+    <!-- Create Timesheet Modal -->
+    <div class="modal" *ngIf="showAddForm">
       <div class="modal-content">
-        <h3>{{ editMode ? 'Edit Daily Status Report' : 'Add New Daily Status Report' }}</h3>
-        <form (ngSubmit)="saveTimesheet()">
+        <h3>Add New Timesheet</h3>
 
-          <label>Task Name:</label>
-          <ng-select class="ngitem"
-                     [(ngModel)]="newTimesheet.taskid"
-                     [items]="taskList"
-                     name="taskTitle"
-                     bindLabel="taskTitle"
-                     bindValue="taskTitle"
-                     [searchable]="true"
-          ></ng-select>
+        <form (ngSubmit)="saveNewTimesheet()">
+          <label>Task Status ID:</label>
+          <input type="text" [(ngModel)]="newTimesheet.task_status_id" name="task_status_id" required />
 
-          <label>Employee:</label>
-          <ng-select class="ngitem"
-                     [(ngModel)]="newTimesheet.employee"
-                     [items]="userList"
-                     name="fullname"
-                     bindLabel="fullname"
-                     bindValue="fullname"
-                     [searchable]="true"
-          ></ng-select>
+          <label>Task:</label>
+              <select [(ngModel)]="newTimesheet.task_id" name="task_id" required>
+                <option *ngFor="let task of tasks()" [value]="task.task_id">{{ task.task_name }}</option>
+              </select>
 
           <label>Work Date:</label>
-          <input type="Date" [(ngModel)]="newTimesheet.workDate" name="workdate" required>
+          <input type="date" [(ngModel)]="newTimesheet.action_date" name="action_date" required />
 
+          <label>Hours Spent:</label>
+          <input type="text" [(ngModel)]="newTimesheet.hours_spent" name="hours_spent" />
 
-
-          <!--          <label>Delivery Manager:</label>-->
-          <!--          <ng-select class="ngitem"-->
-          <!--                     [(ngModel)]="newProject.projectManager"-->
-          <!--                     [items]="userList"-->
-          <!--                     name="projectManager"-->
-          <!--                     bindLabel="fullname"-->
-          <!--                     bindValue="fullname"-->
-          <!--                     [searchable]="true"-->
-          <!--          >-->
-          <!--          </ng-select>-->
-
-          <!--          <label>Baseline start date:</label>-->
-          <!--          <input type="date" [(ngModel)]="newProject.baselinestart" name="baselinestartdate" required >-->
-
-          <!--          <label>Baseline End date:</label>-->
-          <!--          <input type="date" [(ngModel)]="newProject.baselineend" name="baselineenddate" required >-->
-
-          <label>Progress Percentage:</label>
-          <input type="number" [(ngModel)]="newTimesheet.progressPercentage" name="progressPercentage" required >
+          <label>Progress (%):</label>
+          <input type="text" [(ngModel)]="newTimesheet.progress" name="progress" required />
 
           <label>Remarks:</label>
-          <input type="string" [(ngModel)]="newTimesheet.remark" name="remark" required>
+          <input type="text" [(ngModel)]="newTimesheet.remarks" name="remarks" />
 
           <div class="form-buttons">
-            <button type="submit" class="btn-save">
-              {{ editMode ? 'Update' : 'Save' }}
-            </button>
-            <button type="button" class="btn-cancel" (click)="cancel()">Cancel</button>
+            <button type="submit" class="btn-save">Save</button>
+            <button type="button" class="btn-cancel" (click)="showAddForm = false">Cancel</button>
           </div>
         </form>
       </div>
     </div>
 
+    <!-- Edit Timesheet Modal -->
+    <div class="modal" *ngIf="showEditForm">
+      <div class="modal-content">
+        <h3>Edit Timesheet</h3>
+
+        <form (ngSubmit)="saveEditTimesheet()">
+          <label>Task Status ID:</label>
+          <input type="text" [(ngModel)]="editTimesheetModel.task_status_id" name="task_status_id" required disabled/>
+
+
+           <label>Business Unit Name :</label>
+          <input type="text" [(ngModel)]="editTimesheetModel.business_unit_name" name="business_unit_name" required disabled/>
+
+          
+          <label>Business Unit Head Name :</label>
+          <input type="text" [(ngModel)]="editTimesheetModel.business_unit_head_name" name="business_unit_head_name" required disabled/>
+
+          <label>Delivery Manager :</label>
+          <input type="text" [(ngModel)]="editTimesheetModel.delivery_manager_name" name="delivery_manager_name" required disabled/>
+
+          <label>project Name :</label>
+          <input type="text" [(ngModel)]="editTimesheetModel.project_name" name="project_name" required disabled/>
+
+          <label>Deliverable Name :</label>
+          <input type="text" [(ngModel)]="editTimesheetModel.deliverable_name" name="deliverable_name" required disabled/>
+
+
+          <label>Task ID:</label>
+          <input type="text" [(ngModel)]="editTimesheetModel.task_id" name="task_id" required  disabled/>
+
+          
+          <label>Task Name:</label>
+          <input type="text" [(ngModel)]="editTimesheetModel.task_name" name="task_name" required />
+
+
+          <label>Work Date:</label>
+          <input type="date" [(ngModel)]="editTimesheetModel.action_date" name="action_date" required />
+
+          <label>Hours Spent:</label>
+          <input type="text" [(ngModel)]="editTimesheetModel.hours_spent" name="hours_spent" />
+
+          <label>Progress (%):</label>
+          <input type="text" [(ngModel)]="editTimesheetModel.progress" name="progress" required />
+
+          <label>Remarks:</label>
+          <input type="text" [(ngModel)]="editTimesheetModel.remarks" name="remarks" />
+
+          <div class="form-buttons">
+            <button type="submit" class="btn-save">Update</button>
+            <button type="button" class="btn-cancel" (click)="showEditForm = false">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
     <div class="modal" *ngIf="showDeletePopup">
       <div class="modal-content">
-        <h3>Delete Timesheet</h3>
-        <p>Are you sure you want to delete <strong>{{ selectedTimesheet?.id }}</strong>?</p>
+        <h3>Archive Timesheet</h3>
+        <p>Are you sure you want to archive the Timesheet with Task: <strong>{{ selectedTimesheet?.task_name }}</strong>?</p>
         <div class="form-buttons">
-          <button class="btn-delete" (click)="confirmDelete()">Yes, Delete</button>
-          <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+          <button class="btn-delete" (click)="confirmDelete()">Yes, Archive</button>
+          <button class="btn-cancel" (click)="cancelForms()">Cancel</button>
         </div>
       </div>
     </div>
   </div>
 </div>
+
+
+
+<style>
+/* --- Card Layout --- */
+.card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.card-header h2 {
+  font-weight: 400;
+}
+
+/* --- Buttons --- */
+.btn-add, .btn-edit, .btn-delete, .btn-save, .btn-cancel {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add { background: #007bff; color: #fff; }
+.btn-add:hover { background: #0056b3; }
+
+.btn-edit { background: #ffc107; color: #000; margin-right: 4px; }
+.btn-edit:hover { background: #e0a800; }
+
+.btn-delete { background: #dc3545; color: #fff; }
+.btn-delete:hover { background: #c82333; }
+
+.btn-save { background: #28a745; color: #fff; }
+.btn-save:hover { background: #218838; }
+
+.btn-cancel { background: #6c757d; color: #fff; }
+.btn-cancel:hover { background: #5a6268; }
+
+.btn-cancel.small {
+  font-size: 12px;
+  padding: 4px 8px;
+}
+
+/* --- Table --- */
+.table-container {
+  overflow-x: auto;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: Arial, sans-serif;
+}
+
+.table th, .table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.table th {
+  background: #f8f9fa;
+  position: relative;
+}
+
+/* --- Filters --- */
+.th-container {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.filter-wrapper {
+  position: relative;
+}
+
+.filter-btn {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.filter-btn:hover {
+  border-color: #007bff;
+  color: #007bff;
+}
+
+.arrow {
+  transition: transform 0.2s ease;
+}
+
+.arrow.open {
+  transform: rotate(180deg);
+}
+
+/* Dropdown */
+.filter-dropdown {
+  position: absolute;
+  top: 36px;
+  right: 0;
+  width: 220px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  z-index: 1000;
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 10px 0;
+}
+
+.filter-dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.filter-dropdown li {
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+}
+
+.filter-dropdown li:hover {
+  background: #f1f5f9;
+  border-radius: 4px;
+}
+
+.filter-dropdown input[type="checkbox"] {
+  margin-right: 8px;
+  accent-color: #007bff;
+}
+
+.filter-dropdown::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filter-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(0,0,0,0.2);
+  border-radius: 3px;
+}
+
+/* --- Modal --- */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+}
+
+.modal-content {
+  background: #fff;
+  border-radius: 8px;
+  padding: 24px;
+  width: 400px;
+  max-width: 90%;
+
+  max-height: 90vh;
+  overflow-y: scroll;
+}
+
+.modal-content h3 {
+  margin-top: 0;
+}
+
+.modal-content form label {
+  display: block;
+  margin-top: 12px;
+}
+
+.modal-content form input,
+.modal-content form select {
+  width: 100%;
+  padding: 6px 10px;
+  margin-top: 4px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.form-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+/* --- Status Messages --- */
+.loading, .error {
+  margin: 12px 0;
+  padding: 10px;
+  border-radius: 6px;
+}
+
+.loading { background: #e7f3ff; color: #0b5ed7; }
+.error { background: #fdecea; color: #d9534f; }
+</style>

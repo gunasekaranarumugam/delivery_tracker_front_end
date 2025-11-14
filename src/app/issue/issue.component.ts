@@ -1,103 +1,211 @@
-import {Component, inject, OnInit} from '@angular/core';
-import {DataService} from "../data.service";
-import {Deliverable} from "../model/Deliverable";
-import {Project} from "../model/Project";
-import {Issue} from "../model/Issue";
-import {User} from "../model/User";
-import {Task} from "../model/Task";
+import { Component, OnInit, inject, Signal } from '@angular/core';
+import { DataService } from '../data.service';
+import { Issue, IssueCreate, IssueUpdate } from '../model/Issue';
+import { Task } from '../model/Task';
+import { Employee } from '../model/Employee';
+import { Deliverable } from '../model/Deliverable';
+import { Project } from '../model/Project';
+import { BU } from '../model/bu';
 
 @Component({
   selector: 'app-issue',
   templateUrl: './issue.component.html',
   styleUrls: ['./issue.component.scss']
 })
-export class IssueComponent implements OnInit{
+export class IssueComponent implements OnInit {
+  private ds = inject(DataService);
+
+  // --- Signals from DataService ---
+  issues: Signal<Issue[]> = this.ds.issues;
+  projects: Signal<Project[]> = this.ds.projects;
+  tasks: Signal<Task[]> = this.ds.tasks;
+  bus: Signal<BU[]> = this.ds.bu;
+  deliverables: Signal<Deliverable[]> = this.ds.deliverables;
+  employees: Signal<Employee[]> = this.ds.employees;
+  loading: Signal<boolean> = this.ds.issueLoading;
+  error: Signal<string | null> = this.ds.issueError;
+
+  // --- Component UI State ---
   showForm = false;
-  ds = inject(DataService);
-  issues: Issue[] = [];
-  selectedIssue: Issue | null = null;
-  showDeletePopup = false;
   editMode = false;
-  selectedId: string = "";
-  taskList:Task[]=this.ds.getTasks();
-  userList: User[] = this.ds.getUsers();
-  newIssue: Partial<Issue> = {
-    taskId: '', issuetitle: '', issuedescription: '', actionOwner: '', priority: '', status: ''
-  }
+  showDeletePopup = false;
+  selectedIssue: Issue | null = null;
+
+  // --- Form Models ---
+  newIssue: Partial<IssueCreate & IssueUpdate> = {};
+
+  // --- Columns for table & filters ---
+  columns: (keyof Issue)[] = [
+    'business_unit_name', 'project_name', 'deliverable_name', 'task_name',
+    'issue_title', 'issue_description', 'action_owner_name', 'issue_priority',
+    'issue_status', 'created_at', 'created_by_name', 'updated_at', 'updated_by_name'
+  ];
+
+
+  columnLabels: Record<string, string> = {
+  business_unit_name: 'BU',
+  project_name: 'Project',
+  deliverable_name: 'Deliverable',
+  task_name: 'Task',
+  issue_title: 'Issue Title',
+  issue_description: 'Issue Description',
+  action_owner_name: 'Action Owner',
+  issue_priority: 'Priority',
+  issue_status: 'Status',
+  created_at: 'Created At',
+  created_by_name: 'Created By',
+  updated_at: 'Updated At',
+  updated_by_name: 'Updated By'
+};
+
+  // --- Filter Logic ---
+  activeFilter: keyof Issue | null = null;
+  selectedFilters: Partial<Record<keyof Issue, string[]>> = {};
+
   ngOnInit(): void {
-    this.issues = this.ds.issues();
+    this.ds.fetchIssues().subscribe();
+    this.ds.fetchTasks().subscribe();
+    this.ds.fetchEmployees().subscribe();
+    this.ds.fetchDeliverables().subscribe();
+    this.ds.fetchProjects().subscribe();
+    this.ds.fetchBU().subscribe();
   }
+
+  // --- Computed filtered list ---
+  get filteredIssues(): Issue[] {
+    let list = this.issues();
+    for (const key in this.selectedFilters) {
+      const k = key as keyof Issue;
+      const values = this.selectedFilters[k];
+      if (values && values.length) {
+        list = list.filter((i) => values.includes(i[k]!));
+      }
+    }
+    return list;
+  }
+
+  // --- Filter Helpers ---
+  toggleFilter(column: keyof Issue) {
+    this.activeFilter = this.activeFilter === column ? null : column;
+  }
+
+  getUniqueOptions(column: keyof Issue): string[] {
+    return Array.from(new Set(this.issues().map(i => i[column] || '')));
+  }
+
+  isSelected(column: keyof Issue, value: string): boolean {
+    return this.selectedFilters[column]?.includes(value) ?? false;
+  }
+
+  toggleSelection(column: keyof Issue, value: string) {
+    if (!this.selectedFilters[column]) this.selectedFilters[column] = [];
+
+    const idx = this.selectedFilters[column]!.indexOf(value);
+    if (idx > -1) {
+      this.selectedFilters[column]!.splice(idx, 1);
+    } else {
+      this.selectedFilters[column]!.push(value);
+    }
+  }
+
+  clearAllFilters() {
+    this.selectedFilters = {};
+  }
+
+  get hasActiveFilters(): boolean {
+    return Object.keys(this.selectedFilters).some(
+      k => this.selectedFilters[k as keyof Issue]?.length
+    );
+  }
+
+  // --- CRUD Methods ---
   openAddForm() {
     this.showForm = true;
     this.editMode = false;
-    this.newIssue ={
-      taskId: '', issuetitle: '', issuedescription: '', actionOwner: '', priority: '', status: ''
-    }
-  }
-  cancel() {
-    this.showForm = false;
-    this.selectedId;
-    this.newIssue ={
-      taskId: '', issuetitle: '', issuedescription: '', actionOwner: '', priority: '', status: ''
-    }
-  }
-  // Save or update user
-  saveIssue() {
-    let updatedList: Issue[];
-
-    if (this.editMode && this.selectedId) {
-      updatedList = this.ds.getIssues().map(issue =>
-        issue.id === this.selectedId ? { ...issue, ...this.newIssue } as Issue : issue
-      );
-    } else {
-      const newItem: Issue = {
-        id: `issue${this.ds.getIssues().length + 1}`,
-        taskId:this.newIssue.taskId!,
-        issuetitle: this.newIssue.issuetitle!,
-        issuedescription: this.newIssue.issuedescription!,
-        priority:this.newIssue.priority!,
-        actionOwner:this.newIssue.actionOwner!,
-        status:this.newIssue.status!
-      };
-
-      updatedList = [...this.ds.getIssues(), newItem];
-    }
-
-    this.ds.updateIssues(updatedList);
-
-    this.issues = this.ds.getIssues();
-    this.cancel();
+    this.newIssue = {};
+    this.selectedIssue = null;
   }
 
-  // Edit existing user
-  editUser(issue: Issue) {
+  openEditForm(issue: Issue) {
     this.showForm = true;
     this.editMode = true;
-    this.selectedId = issue.id!;
-    this.newIssue = { ...issue }
-    ;
+    this.selectedIssue = issue;
+    this.newIssue = {
+      issue_id: issue.issue_id,
+      task_id: issue.task_id,
+      issue_title: issue.issue_title,
+      issue_description: issue.issue_description,
+      action_owner_id: issue.action_owner_id,
+      issue_priority: issue.issue_priority,
+      issue_status: issue.issue_status
+    };
   }
 
-  // Open delete confirmation popup
+  saveIssue() {
+    if (!this.newIssue.issue_title || !this.newIssue.task_id || !this.newIssue.action_owner_id) {
+      console.error('Title, Task, and Action Owner are required.');
+      return;
+    }
+
+    if (this.editMode && this.selectedIssue?.issue_id) {
+      const payload: IssueUpdate = {
+        issue_id: this.selectedIssue.issue_id,
+        task_id: this.newIssue.task_id!,
+        issue_title: this.newIssue.issue_title!,
+        issue_description: this.newIssue.issue_description || '',
+        action_owner_name: this.newIssue.action_owner_name || '',
+        action_owner_id: this.newIssue.action_owner_id || '',
+        issue_priority: this.newIssue.issue_priority || 'Medium',
+        issue_status: this.newIssue.issue_status || 'Open',
+        business_unit_id: '',
+        business_unit_name: this.newIssue.business_unit_name,
+        project_id: '',
+        project_name: '',
+        deliverable_id: '',
+        deliverable_name: '',
+        task_name: ''
+      };
+      this.ds.updateIssue(this.selectedIssue.issue_id, payload).subscribe({
+        next: () => this.cancelForms(),
+        error: (err) => console.error('Update failed:', err)
+      });
+    } else {
+      const payload: IssueCreate = {
+        issue_id: '',
+        task_id: this.newIssue.task_id!,
+        issue_title: this.newIssue.issue_title!,
+        issue_description: this.newIssue.issue_description || '',
+        action_owner_id: this.newIssue.action_owner_id!,
+        issue_priority: this.newIssue.issue_priority || 'Medium',
+        issue_status: this.newIssue.issue_status || 'Open',
+        entity_status: 'Active'
+      };
+      this.ds.createIssue(payload).subscribe({
+        next: () => this.cancelForms(),
+        error: (err) => console.error('Creation failed:', err)
+      });
+    }
+  }
+
   openDeletePopup(issue: Issue) {
     this.selectedIssue = issue;
     this.showDeletePopup = true;
   }
 
-  // Confirm delete
   confirmDelete() {
-    if (!this.issues) return;
-
-    const updatedList = this.ds.issues().filter(item => item.id !== this.selectedIssue!.id);
-    this.ds.updateIssues(updatedList);
-
-    this.issues = this.ds.getIssues();
-    this.showDeletePopup = false;
-    this.selectedIssue = null;
+    if (this.selectedIssue?.issue_id) {
+      this.ds.deleteIssue(this.selectedIssue.issue_id).subscribe({
+        next: () => this.cancelForms(),
+        error: (err) => console.error('Delete failed:', err)
+      });
+    }
   }
-  // Cancel delete
-  cancelDelete() {
+
+  cancelForms() {
+    this.showForm = false;
     this.showDeletePopup = false;
+    this.editMode = false;
     this.selectedIssue = null;
+    this.newIssue = {};
   }
 }

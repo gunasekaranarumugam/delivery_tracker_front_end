@@ -1,105 +1,231 @@
-import {Component, inject, OnInit} from '@angular/core';
-import {DataService} from "../data.service";
-import {User} from "../model/User";
-import {Project} from "../model/Project";
-import {BU} from "../model/bu";
+import { Component, OnInit, inject, Signal } from '@angular/core';
+import { DataService } from '../data.service';
+import { Project, ProjectCreate, ProjectUpdate } from '../model/Project';
+import { BU } from '../model/bu';
+import { Employee } from '../model/Employee';
 
 @Component({
   selector: 'app-project',
   templateUrl: './project.component.html',
-  styleUrls: ['./project.component.scss']
+  styleUrls: ['./project.component.scss'],
 })
-export class ProjectComponent implements OnInit{
-  showForm = false;
-  ds = inject(DataService);
-  projects: Project[] = [];
-  selectedProject: Project | null = null;
+export class ProjectComponent implements OnInit {
+  private ds = inject(DataService);
+
+  // --- Signals from DataService ---
+  projects: Signal<Project[]> = this.ds.projects;
+  loading: Signal<boolean> = this.ds.projectLoading;
+  error: Signal<string | null> = this.ds.projectError;
+
+  businessUnits: Signal<BU[]> = this.ds.bu;
+  employees: Signal<Employee[]> = this.ds.employees;
+
+  // --- Component State ---
+  showCreateForm = false;
+  showEditForm = false;
   showDeletePopup = false;
-  editMode = false;
-  selectedId: string = "";
-  selectedBuId:string='';
-  buList:BU[]=this.ds.getBU();
-  userList:User[]=this.ds.getUsers();
-  newProject: Partial<Project> = {buId: '', name:'',projectManager:'', description:'',craetedat:'',baselinestart:'',baselineend:'',plannedStart:'',plannedEnd:''};
+
+  selectedProject: Project | null = null;
+
+  // --- Form Models ---
+  newProject: ProjectCreate = {
+    project_id: '',
+    project_name: '',
+    project_description: '',
+    business_unit_id: '',
+    delivery_manager_id: '',
+    baseline_start_date: '',
+    baseline_end_date: ''
+  };
+
+  editProjectModel: ProjectUpdate = {
+    project_id: '',
+    project_name: '',
+    project_description: '',
+    business_unit_id: '',
+    business_unit_name: '',
+    delivery_manager_id: '',
+    delivery_manager_name: '',
+    baseline_end_date: '',
+    baseline_start_date: '',
+  };
+
+  editingProjectId: string | null = null;
+
+  // --- Columns for table & filters ---
+  columns: (keyof Project)[] = [
+    'project_name',
+    'business_unit_name',
+    'delivery_manager_name',
+    'project_description',
+    'baseline_start_date',
+    'baseline_end_date',
+    'planned_start_date',
+    'planned_end_date',
+    'created_by_name',
+    'created_at',
+    'updated_at',
+    'updated_by_name',
+  ];
+
+  columnLabels: Record<string, string> = {
+  project_name: 'Project',
+  business_unit_name: 'BU',
+  delivery_manager_name: 'DM',
+  project_description: 'Description',
+  baseline_start_date: 'Baseline Start Date',
+  baseline_end_date: 'Baseline End Date',
+  planned_start_date: 'Planned Start Date',
+  planned_end_date: 'Planned End Date',
+  created_by_name: 'Created By',
+  created_at: 'Created At',
+  updated_at: 'Updated At',
+  updated_by_name: 'Updated By'
+};
+
+  // --- Filter logic ---
+  activeFilter: keyof Project | null = null;
+  selectedFilters: Partial<Record<keyof Project, string[]>> = {};
+
   ngOnInit(): void {
-    this.projects = this.ds.projects();
+    this.ds.fetchBU().subscribe();
+    this.ds.fetchEmployees().subscribe();
+    this.ds.fetchProjects().subscribe();
   }
-  openAddForm() {
-    this.showForm = true;
-    this.editMode = false;
-    this.newProject = { buId: '', name:'', projectManager:'', description:'',craetedat:'',baselinestart:'',baselineend:'',plannedStart:'',plannedEnd:''};
-  }
-  cancel() {
-    this.showForm = false;
-    this.selectedId;
-    this.newProject = { buId: '', name:'', projectManager:'', description:'',craetedat:'',baselinestart:'',baselineend:'',plannedStart:'',plannedEnd:'' };
-  }
-  // Save or update user
-  saveUser() {
-    let updatedList: Project[];
 
-    if (this.editMode && this.selectedId) {
-      updatedList = this.ds.getProjects().map(project =>
-        project.id === this.selectedId ? { ...project, ...this.newProject } as Project : project
-      );
-    } else {
-      const newItem: Project = {
-        id: `projest${this.ds.getProjects().length + 1}`,
-        name: this.newProject.name!,
-        projectManager:this.newProject.projectManager,
-        description: this.newProject.description!,
-        buId:this.newProject.buId!,
-        craetedat: new Date().toLocaleDateString('en-GB', {
-        day: '2-digit',
-        month: 'numeric',
-        year: 'numeric'
-      }),
-        baselinestart:this.newProject.plannedStart!,
-        baselineend:this.newProject.plannedEnd!,
-        plannedStart:this.newProject.plannedStart!,
-        plannedEnd:this.newProject.plannedEnd
-      };
-      console.log("bu :" + newItem.buId)
-      console.log("bu :" + newItem.projectManager)
-
-      updatedList = [...this.ds.projects(), newItem];
-      console.log("updatedList :" +updatedList)
+  // --- Computed filtered list ---
+  get filteredProjects(): Project[] {
+    let list = this.projects();
+    for (const key in this.selectedFilters) {
+      const k = key as keyof Project;
+      const values = this.selectedFilters[k];
+      if (values && values.length) {
+        list = list.filter(p => values.includes(p[k]!));
+      }
     }
-
-    this.ds.updateProject(updatedList);
-
-    this.projects = this.ds.getProjects();
-    this.cancel();
+    return list;
   }
 
-  // Edit existing user
-  editUser(project: Project) {
-    this.showForm = true;
-    this.editMode = true;
-    this.selectedId = project.id;
-    this.newProject = { ...project };
+  // --- Filter Helpers ---
+  toggleFilter(column: keyof Project) {
+    this.activeFilter = this.activeFilter === column ? null : column;
   }
 
-  // Open delete confirmation popup
-  openDeletePopup(project: Project) {
-    this.selectedProject = project;
+  getUniqueOptions(column: keyof Project): string[] {
+    const values = this.projects().map(p => p[column] || '');
+    return Array.from(new Set(values));
+  }
+
+  isSelected(column: keyof Project, value: string): boolean {
+    return this.selectedFilters[column]?.includes(value) ?? false;
+  }
+
+  toggleSelection(column: keyof Project, value: string) {
+    if (!this.selectedFilters[column]) this.selectedFilters[column] = [];
+    const idx = this.selectedFilters[column]!.indexOf(value);
+    if (idx > -1) {
+      this.selectedFilters[column]!.splice(idx, 1);
+    } else {
+      this.selectedFilters[column]!.push(value);
+    }
+  }
+
+  clearAllFilters() {
+    this.selectedFilters = {};
+  }
+
+  get hasActiveFilters(): boolean {
+    return Object.keys(this.selectedFilters).some(
+      k => this.selectedFilters[k as keyof Project]?.length
+    );
+  }
+
+  // --- CRUD Methods ---
+
+  // --- CREATE FORM ---
+  openCreateForm(): void {
+    this.showCreateForm = true;
+    this.showEditForm = false;
+    this.newProject = {
+      project_id: '',
+      project_name: '',
+      project_description: '',
+      business_unit_id: '',
+      delivery_manager_id: '',
+      baseline_start_date: '',
+      baseline_end_date: ''
+    };
+  }
+
+  saveNewProject(): void {
+    const payload: Project = {
+      ...this.newProject,
+      business_unit_name: this.getBUName(this.newProject.business_unit_id),
+      delivery_manager_name: this.getEmployeeName(this.newProject.delivery_manager_id),
+      entity_status: 'Active',
+      project_id: this.newProject.project_id || Math.random().toString(36).substr(2, 9)
+    } as Project;
+
+    this.ds.createProject(payload).subscribe({
+      next: () => this.cancelForms(),
+      error: err => console.error('Creation failed:', err)
+    });
+  }
+
+  // --- EDIT FORM ---
+  openEditForm(proj: Project): void {
+    this.showEditForm = true;
+    this.showCreateForm = false;
+    this.editingProjectId = proj.project_id;
+    this.editProjectModel = {
+      ...proj
+    };
+  }
+
+  saveEditProject(): void {
+    if (!this.editingProjectId) return;
+    const payload: ProjectUpdate = {
+      ...this.editProjectModel,
+      business_unit_name: this.getBUName(this.editProjectModel.business_unit_id),
+      delivery_manager_name: this.getEmployeeName(this.editProjectModel.delivery_manager_id)
+    };
+    this.ds.updateProject(this.editingProjectId, payload).subscribe({
+      next: () => this.cancelForms(),
+      error: err => console.error('Update failed:', err)
+    });
+  }
+
+  // --- DELETE ---
+  openDeletePopup(proj: Project): void {
+    this.selectedProject = proj;
     this.showDeletePopup = true;
   }
 
-  // Confirm delete
-  confirmDelete() {
-    if (!this.selectedProject) return;
-
-    const updatedList = this.ds.getProjects().filter(item => item.id !== this.selectedProject!.id);
-    this.ds.updateProject(updatedList);
-
-    this.projects = this.ds.getProjects();
-    this.showDeletePopup = false;
-    this.selectedProject = null;
+  confirmDelete(): void {
+    if (this.selectedProject?.project_id) {
+      this.ds.deleteProject(this.selectedProject.project_id).subscribe({
+        next: () => this.cancelForms(),
+        error: err => console.error('Delete failed:', err)
+      });
+    }
   }
-  // Cancel delete
-  cancelDelete() {
+
+  // --- Cancel ---
+  cancelForms(): void {
+    this.showCreateForm = false;
+    this.showEditForm = false;
     this.showDeletePopup = false;
     this.selectedProject = null;
+    this.editingProjectId = null;
+  }
+
+  // --- Helpers ---
+  getBUName(id?: string): string {
+    return this.businessUnits().find(b => b.business_unit_id === id)?.business_unit_name || '';
+  }
+
+  getEmployeeName(id?: string): string {
+    const emp = this.employees().find(e => e.employee_id === id);
+    return emp ? `${emp.employee_full_name} (${emp.employee_email_address})` : '';
   }
 }

@@ -1,7 +1,6 @@
 import { Component } from '@angular/core';
-import {AuthService} from "../auth.service";
-import { Router} from "@angular/router";
-import {PageHeaderComponent} from "../../page-header/page-header.component";
+import { Router } from '@angular/router';
+import { AuthService } from '../auth.service';
 
 @Component({
   selector: 'app-login',
@@ -9,26 +8,39 @@ import {PageHeaderComponent} from "../../page-header/page-header.component";
   styleUrls: ['./login.component.scss']
 })
 export class LoginComponent {
-   public username:string="";
-   public password:string="";
-   public errorMessage:string = '';
-   constructor(private authService:AuthService,private router:Router) {
-   }
-   onSubmit() {
-     this.authService.login(this.username, this.password).subscribe({
-       next: (response) => {
-         console.log('Login Response:', response);
+  username: string = '';
+  password: string = '';
+  errorMessage: string = '';
+  tips: string[] = [];
 
-         // Store token in localStorage
-         localStorage.setItem('token', response.token);
+  constructor(private authService: AuthService, private router: Router) {}
 
-         // Navigate to new page after successful login
-         this.router.navigateByUrl('/bu');
-       },
-       error: (err) => {
-         console.error('Login failed:', err);
-         this.errorMessage = err.message;
-       }
-     });
-   }
+  onSubmit(): void {
+    if (!this.username || !this.password) {
+      this.errorMessage = 'Please enter both email and password.';
+      return;
+    }
+
+    this.errorMessage = '';
+
+    this.authService.login(this.username, this.password).subscribe({
+      next: (res) => {
+        // Optional welcome tip
+        this.tips.push(`Welcome, ${res.employee_full_name}!`);
+        this.router.navigate(['/employee']);
+      },
+      error: (err) => {
+        console.error('Login error:', err);
+        if (err.status === 401) {
+          this.errorMessage = 'Invalid email or password.';
+        } else if (err.error?.detail) {
+          this.errorMessage = Array.isArray(err.error.detail)
+            ? err.error.detail.map((d: any) => d.msg).join(', ')
+            : err.error.detail;
+        } else {
+          this.errorMessage = 'Something went wrong. Please try again later.';
+        }
+      }
+    });
+  }
 }

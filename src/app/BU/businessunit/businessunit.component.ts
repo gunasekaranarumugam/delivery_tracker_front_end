@@ -1,82 +1,191 @@
-import {Component, inject, OnInit} from '@angular/core';
-import {DataService} from "../../data.service";
-import {BU} from "../../model/bu";
-import {User} from "../../model/User";
+import { Component, OnInit, inject, Signal } from '@angular/core';
+import { DataService } from '../../data.service';
+import { BU, BusinessUnitCreate, BusinessUnitUpdate } from '../../model/bu';
+import { Employee } from 'src/app/model/Employee';
 
 @Component({
   selector: 'app-businessunit',
   templateUrl: './businessunit.component.html',
-  styleUrls: ['./businessunit.component.scss']
+  styleUrls: ['./businessunit.component.scss'],
 })
-export class BusinessunitComponent implements OnInit {
-  bu_items: BU[] = [];
-  showForm = false;
-  ds = inject(DataService);
-  selectedBU: any = null;
+export class BusinessUnitComponent implements OnInit {
+  private ds = inject(DataService);
+
+  // --- Signals from DataService ---
+  buItems: Signal<BU[]> = this.ds.bu;
+  buLoading: Signal<boolean> = this.ds.buLoading;
+  buError: Signal<string | null> = this.ds.buError;
+  employees: Signal<Employee[]> = this.ds.employees;
+
+  // --- Component State ---
+  showCreateForm = false;
+  showEditForm = false;
   showDeletePopup = false;
-  editMode = false;
-  selectedId: number | null = null;
-  newBU: Partial<BU> = {name: '', lead: ''};
+
+  selectedBU: BU | null = null;
+
+  // --- Form Models ---
+  newBU: BusinessUnitCreate = {
+    business_unit_id: '',
+    business_unit_name: '',
+    business_unit_description: '',
+    business_unit_head_id: '',
+  };
+
+  editBUModel: BusinessUnitUpdate = {
+    business_unit_id: '',
+    business_unit_name: '',
+    business_unit_head_name: '',
+    business_unit_description: '',
+    business_unit_head_id: ''
+  };
+
+  editingBUId: string | null = null;
+
+  // --- Columns for table & filters ---
+  columns: (keyof BU)[] = [
+    'business_unit_name',
+    'business_unit_head_name',
+    'business_unit_description',
+    'created_by_name',
+    'created_at',
+    'updated_at',
+    'updated_by_name',
+  ];
+
+  columnLabels: Record<string, string> = {
+  business_unit_name: 'BU',
+  business_unit_head_name: 'BU Head',
+  business_unit_description: 'Description',
+  created_by_name: 'Created By',
+  created_at: 'Created At',
+  updated_at: 'Updated At',
+  updated_by_name: 'Updated By'
+};
+
+
+  // --- Filter logic ---
+  activeFilter: keyof BU | null = null;
+  selectedFilters: Partial<Record<keyof BU, string[]>> = {};
 
   ngOnInit(): void {
-    this.bu_items = this.ds.bu();
-  }
-  openAddForm() {
-    this.showForm = true;
-    this.editMode = false;
-    this.newBU = {name: '', lead: ''};
+    this.ds.fetchBU().subscribe();
+    this.ds.fetchEmployees().subscribe();
   }
 
-  cancel() {
-    this.showForm = false;
-    this.selectedId = null;
-    this.newBU = {name: '', lead: ''};
-  }
-
-  saveBusinessUnit() {
-    let updatedList: BU[];
-
-    if (this.editMode && this.selectedId !== null) {
-      //  Update existing BU
-      updatedList = this.ds.getBU().map(bu =>
-        bu.id === this.selectedId ? { ...bu, ...this.newBU } as BU : bu
-      );
-    } else {
-      //  Add new BU
-      const newItem: BU = {
-        id: this.ds.getBU().length + 1,
-        name: this.newBU.name!,
-        lead: this.newBU.lead!
-      };
-      updatedList = [...this.ds.getBU(), newItem];
+  // --- Computed filtered list ---
+  get filteredBUs(): BU[] {
+    let list = this.buItems();
+    for (const key in this.selectedFilters) {
+      const k = key as keyof BU;
+      const values = this.selectedFilters[k];
+      if (values && values.length) {
+        list = list.filter((bu) => values.includes(bu[k]!));
+      }
     }
-
-    // ✅ Apply the update to the signal
-    this.ds.update(updatedList);
-
-    // Refresh local list & close form
-    this.bu_items = this.ds.getBU();
-    this.cancel();
+    return list;
   }
-  editBU(bu: BU) {
-    this.showForm = true;
-    this.editMode = true;
-    this.selectedId = bu.id;
-    this.newBU = { ...bu };
+
+  // --- Filter Helpers ---
+  toggleFilter(column: keyof BU) {
+    this.activeFilter = this.activeFilter === column ? null : column;
   }
-  openDeletePopup(bu: any) {
+
+  getUniqueOptions(column: keyof BU): string[] {
+    const values = this.buItems().map((bu) => bu[column] || '');
+    return Array.from(new Set(values));
+  }
+
+  isSelected(column: keyof BU, value: string): boolean {
+    return this.selectedFilters[column]?.includes(value) ?? false;
+  }
+
+  toggleSelection(column: keyof BU, value: string) {
+    if (!this.selectedFilters[column]) this.selectedFilters[column] = [];
+
+    const idx = this.selectedFilters[column]!.indexOf(value);
+    if (idx > -1) {
+      this.selectedFilters[column]!.splice(idx, 1);
+    } else {
+      this.selectedFilters[column]!.push(value);
+    }
+  }
+
+  clearAllFilters() {
+    this.selectedFilters = {};
+  }
+
+  get hasActiveFilters(): boolean {
+    return Object.keys(this.selectedFilters).some(
+      (k) => this.selectedFilters[k as keyof BU]?.length
+    );
+  }
+
+  // --- CRUD Methods ---
+
+  // --- CREATE FORM ---
+  openCreateForm(): void {
+    this.showCreateForm = true;
+    this.showEditForm = false;
+    this.newBU = {
+      business_unit_id: '',
+      business_unit_name: '',
+      business_unit_description: '',
+      business_unit_head_id: '',
+    };
+  }
+
+  saveNewBU(): void {
+    this.ds.createBU(this.newBU).subscribe({
+      next: () => this.cancelForms(),
+      error: (err) => console.error('Creation failed:', err),
+    });
+  }
+
+  // --- EDIT FORM ---
+  openEditForm(bu: BU): void {
+    this.showEditForm = true;
+    this.showCreateForm = false;
+    this.editingBUId = bu.business_unit_id;
+    this.editBUModel = {
+      business_unit_head_id: bu.business_unit_head_id,
+      business_unit_id: bu.business_unit_id,
+      business_unit_name: bu.business_unit_name,
+      business_unit_head_name: bu.business_unit_head_name,
+      business_unit_description: bu.business_unit_description,
+    };
+  }
+
+  saveEditBU(): void {
+    if (!this.editingBUId) return;
+
+    this.ds.updateBU(this.editingBUId, this.editBUModel).subscribe({
+      next: () => this.cancelForms(),
+      error: (err) => console.error('Update failed:', err),
+    });
+  }
+
+  // --- DELETE ---
+  openDeletePopup(bu: BU): void {
     this.selectedBU = bu;
     this.showDeletePopup = true;
   }
-  confirmDelete() {
-    this.bu_items = this.bu_items.filter(item => item.id !== this.selectedBU.id);
-    this.showDeletePopup = false;
-    this.selectedBU = null;
-  }
-  cancelDelete() {
-    this.showDeletePopup = false;
-    this.selectedBU = null;
+
+  confirmDelete(): void {
+    if (this.selectedBU?.business_unit_id) {
+      this.ds.deleteBU(this.selectedBU.business_unit_id).subscribe({
+        next: () => this.cancelForms(),
+        error: (err) => console.error('Delete failed:', err),
+      });
+    }
   }
 
-
+  // --- CANCEL ---
+  cancelForms(): void {
+    this.showCreateForm = false;
+    this.showEditForm = false;
+    this.showDeletePopup = false;
+    this.selectedBU = null;
+    this.editingBUId = null;
+  }
 }

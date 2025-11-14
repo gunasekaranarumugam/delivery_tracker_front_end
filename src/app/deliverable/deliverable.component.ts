@@ -1,94 +1,238 @@
-import {Component, inject, OnInit} from '@angular/core';
-import {DataService} from "../data.service";
-import {Project} from "../model/Project";
-import {BU} from "../model/bu";
-import {User} from "../model/User";
-import {Deliverable} from "../model/Deliverable";
+import { Component, OnInit, inject, Signal } from '@angular/core';
+import { DataService } from '../data.service';
+import { Deliverable, DeliverableCreate, DeliverableUpdate } from '../model/Deliverable';
+import { Project } from '../model/Project';
+import { Employee } from '../model/Employee';
+import { BU } from '../model/bu';
 
 @Component({
   selector: 'app-deliverable',
   templateUrl: './deliverable.component.html',
   styleUrls: ['./deliverable.component.scss']
 })
-export class DeliverableComponent implements OnInit{
-  showForm = false;
-  ds = inject(DataService);
-  deliverables: Deliverable[] = [];
-  selectedDeliverable: Deliverable | null = null;
+export class DeliverableComponent implements OnInit {
+  private ds = inject(DataService);
+
+  // --- Signals from DataService ---
+  deliverableItems: Signal<Deliverable[]> = this.ds.deliverables;
+  deliverableLoading: Signal<boolean> = this.ds.deliverableLoading;
+  deliverableError: Signal<string | null> = this.ds.deliverableError;
+  projects: Signal<Project[]> = this.ds.projects;
+  employees: Signal<Employee[]> = this.ds.employees;
+  businessUnits: Signal<BU[]> = this.ds.bu;
+
+  // --- Component State ---
+  showCreateForm = false;
+  showEditForm = false;
   showDeletePopup = false;
-  editMode = false;
-  selectedId: string = "";
-  projectList:Project[]=this.ds.getProjects();
-  newDeliverable: Partial<Deliverable> = {projectId: '', title:'', description:'',priority:'',plannedStartDate:'',plannedEndDate:''};
+
+  selectedDeliverable: Deliverable | null = null;
+
+  // --- Form Models ---
+  newDeliverable: Partial<DeliverableCreate> = {
+    deliverable_id: '',
+    project_id: '',
+    deliverable_name: '',
+    deliverable_description: '',
+    priority: '',
+    baseline_start_date: '',
+    baseline_end_date: ''
+  };
+
+  editDeliverableModel: DeliverableUpdate = {
+    business_unit_name: '',
+    business_unit_id: '',
+    business_unit_head_id: '',
+    business_unit_head_name: '',
+    project_id: '',
+    project_name: '',
+    delivery_manager_id: '',
+    delivery_manager_name: '',
+    deliverable_id: '',
+    deliverable_name: '',
+    priority: '',
+    planned_start_date: '',
+    planned_end_date: '',
+    baseline_start_date: '',
+    baseline_end_date: ''
+  };
+
+  editingDeliverableId: string | null = null;
+
+  // --- Columns for table & filters ---
+  columns: (keyof Deliverable)[] = [
+    'business_unit_name',
+    'business_unit_head_name',
+    'project_name',
+    'delivery_manager_name',
+    'deliverable_name',
+    'priority',
+    'baseline_start_date',
+    'baseline_end_date',
+    'planned_start_date',
+    'planned_end_date',
+    'created_at',
+    'created_by_name',
+    'updated_at',
+    'updated_by_name'
+  ];
+
+  columnLabels: Record<string, string> = {
+  business_unit_name: 'BU',
+  business_unit_head_name: 'BU Head',
+  project_name: 'Project',
+  delivery_manager_name: 'DM',
+  deliverable_name: 'Deliverable',
+  priority: 'Priority',
+  baseline_start_date: 'Baseline Start Date',
+  baseline_end_date: 'Baseline End Date',
+  planned_start_date: 'Planned Start Date',
+  planned_end_date: 'Planned End Date',
+  created_at: 'Created At',
+  created_by_name: 'Created By',
+  updated_at: 'Updated At',
+  updated_by_name: 'Updated By'
+};
+
+
+
+  // --- Filter logic ---
+  activeFilter: keyof Deliverable | null = null;
+  selectedFilters: Partial<Record<keyof Deliverable, string[]>> = {};
+
   ngOnInit(): void {
-    this.deliverables = this.ds.deliverables();
+    this.ds.fetchDeliverables().subscribe();
+    this.ds.fetchProjects().subscribe();
+    this.ds.fetchBU().subscribe();
+    this.ds.fetchEmployees().subscribe();
   }
-  openAddForm() {
-    this.showForm = true;
-    this.editMode = false;
-    this.newDeliverable = { projectId: '', title:'', description:'',priority:'',plannedStartDate:'',plannedEndDate:''};
-  }
-  cancel() {
-    this.showForm = false;
-    this.selectedId;
-    this.newDeliverable = { projectId: '', title:'', description:'',priority:'',plannedStartDate:'',plannedEndDate:''};
-  }
-  // Save or update user
-  saveDeliverable() {
-    let updatedList: Deliverable[];
 
-    if (this.editMode && this.selectedId) {
-      updatedList = this.ds.getDeliverables().map(deliverable =>
-        deliverable.id === this.selectedId ? { ...deliverable, ...this.newDeliverable } as Deliverable : deliverable
-      );
-    } else {
-      const newItem: Deliverable = {
-        id: `deliverable${this.ds.getDeliverables().length + 1}`,
-        projectId:this.newDeliverable.projectId!,
-        title: this.newDeliverable.title!,
-        description: this.newDeliverable.description!,
-        priority:this.newDeliverable.priority!,
-        plannedStartDate:this.newDeliverable.plannedStartDate!,
-        plannedEndDate:this.newDeliverable.plannedEndDate!
-      };
-
-      updatedList = [...this.ds.deliverables(), newItem];
+  // --- Computed filtered list ---
+  get filteredDeliverables(): Deliverable[] {
+    let list = this.deliverableItems();
+    for (const key in this.selectedFilters) {
+      const k = key as keyof Deliverable;
+      const values = this.selectedFilters[k];
+      if (values && values.length) {
+        list = list.filter((d) => values.includes(d[k]!));
+      }
     }
-
-    this.ds.updateDeliverables(updatedList);
-
-    this.deliverables = this.ds.getDeliverables();
-    this.cancel();
+    return list;
   }
 
-  // Edit existing user
-  editUser(deliverable: Deliverable) {
-    this.showForm = true;
-    this.editMode = true;
-    this.selectedId = deliverable.id!;
-    this.newDeliverable = { ...deliverable };
+  // --- Filter Helpers ---
+  toggleFilter(column: keyof Deliverable) {
+    this.activeFilter = this.activeFilter === column ? null : column;
   }
 
-  // Open delete confirmation popup
-  openDeletePopup(deliverable: Deliverable) {
-    this.selectedDeliverable = deliverable;
+  getUniqueOptions(column: keyof Deliverable): string[] {
+    const values = this.deliverableItems().map((d) => d[column] || '');
+    return Array.from(new Set(values));
+  }
+
+  isSelected(column: keyof Deliverable, value: string): boolean {
+    return this.selectedFilters[column]?.includes(value) ?? false;
+  }
+
+  toggleSelection(column: keyof Deliverable, value: string) {
+    if (!this.selectedFilters[column]) this.selectedFilters[column] = [];
+
+    const idx = this.selectedFilters[column]!.indexOf(value);
+    if (idx > -1) {
+      this.selectedFilters[column]!.splice(idx, 1);
+    } else {
+      this.selectedFilters[column]!.push(value);
+    }
+  }
+
+  clearAllFilters() {
+    this.selectedFilters = {};
+  }
+
+  get hasActiveFilters(): boolean {
+    return Object.keys(this.selectedFilters).some(
+      (k) => this.selectedFilters[k as keyof Deliverable]?.length
+    );
+  }
+
+  // --- CRUD Methods ---
+
+  // --- CREATE FORM ---
+  openCreateForm(): void {
+    this.showCreateForm = true;
+    this.showEditForm = false;
+    this.newDeliverable = {
+      deliverable_id: '',
+      project_id: '',
+      deliverable_name: '',
+      deliverable_description: '',
+      priority: '',
+      baseline_start_date: '',
+      baseline_end_date: ''
+    };
+  }
+
+  saveNewDeliverable(): void {
+    this.ds.createDeliverable(this.newDeliverable).subscribe({
+      next: () => this.cancelForms(),
+      error: (err) => console.error('Creation failed:', err)
+    });
+  }
+
+  // --- EDIT FORM ---
+  openEditForm(d: Deliverable): void {
+    this.showEditForm = true;
+    this.showCreateForm = false;
+    this.editingDeliverableId = d.deliverable_id;
+    this.editDeliverableModel = {
+      business_unit_name: d.business_unit_name,
+      business_unit_id: d.business_unit_id,
+      business_unit_head_id: d.business_unit_head_id,
+      business_unit_head_name: d.business_unit_head_name,
+      project_id: d.project_id,
+      project_name: d.project_name,
+      delivery_manager_id: d.delivery_manager_id,
+      delivery_manager_name: d.delivery_manager_name,
+      deliverable_id: d.deliverable_id,
+      deliverable_name: d.deliverable_name,
+      priority: d.priority,
+      planned_start_date: d.planned_start_date,
+      planned_end_date: d.planned_end_date,
+      baseline_start_date: d.baseline_start_date,
+      baseline_end_date: d.baseline_end_date,
+    };
+  }
+
+  saveEditDeliverable(): void {
+    if (!this.editingDeliverableId) return;
+
+    this.ds.updateDeliverable(this.editingDeliverableId, this.editDeliverableModel).subscribe({
+      next: () => this.cancelForms(),
+      error: (err) => console.error('Update failed:', err)
+    });
+  }
+
+  // --- DELETE ---
+  openDeletePopup(d: Deliverable): void {
+    this.selectedDeliverable = d;
     this.showDeletePopup = true;
   }
 
-  // Confirm delete
-  confirmDelete() {
-    if (!this.deliverables) return;
-
-    const updatedList = this.ds.deliverables().filter(item => item.id !== this.selectedDeliverable!.id);
-    this.ds.updateDeliverables(updatedList);
-
-    this.deliverables = this.ds.getDeliverables();
-    this.showDeletePopup = false;
-    this.selectedDeliverable = null;
+  confirmDelete(): void {
+    if (this.selectedDeliverable?.deliverable_id) {
+      this.ds.deleteDeliverable(this.selectedDeliverable.deliverable_id).subscribe({
+        next: () => this.cancelForms(),
+        error: (err) => console.error('Delete failed:', err)
+      });
+    }
   }
-  // Cancel delete
-  cancelDelete() {
+
+  // --- CANCEL ---
+  cancelForms(): void {
+    this.showCreateForm = false;
+    this.showEditForm = false;
     this.showDeletePopup = false;
     this.selectedDeliverable = null;
+    this.editingDeliverableId = null;
   }
 }
