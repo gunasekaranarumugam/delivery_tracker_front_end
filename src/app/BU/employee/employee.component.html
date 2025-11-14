@@ -4,35 +4,30 @@
 
   <div class="content">
     <div class="card">
-      <!-- Card Header -->
       <div class="card-header">
-        <h2>Projects</h2>
+        <h2>Employees</h2>
         <button class="btn-cancel" (click)="openCreateForm()">+ Add New</button>
        
       </div>
 
       <!-- Loading/Error -->
-      <div *ngIf="loading()" class="loading">Loading Projects...</div>
+      <div *ngIf="loading()" class="loading">Loading Employees...</div>
       <div *ngIf="error()" class="error">Error: Could not load data.</div>
 
-      <!-- Project Table -->
+      <!-- Employee Table -->
       <div class="table-container" *ngIf="!loading()">
         <table class="table">
           <thead>
             <tr>
               <th *ngFor="let col of columns">
                 <div class="th-container">
-                <span>{{ columnLabels[col] || (col.replace('_', ' ') | titlecase) }}</span>
-
-
-                  <!-- Filter Dropdown -->
+                  <span>{{ columnLabels[col] || (col.replace('_', ' ') | titlecase) }}</span>
                   <div class="filter-wrapper">
                     <button class="filter-btn" 
                             [class.active]="activeFilter === col"
                             (click)="toggleFilter(col)">
                       <span class="arrow" [class.open]="activeFilter === col">▼</span>
                     </button>
-
                     <div class="filter-dropdown" *ngIf="activeFilter === col">
                       <ul>
                         <li *ngFor="let option of getUniqueOptions(col)" 
@@ -56,24 +51,18 @@
             </tr>
           </thead>
           <tbody>
-            <tr *ngFor="let project of filteredProjects">
-              <td>{{ project.project_name }}</td>
-              <td>{{ project.business_unit_name }}</td>
-               <td>{{ project.delivery_manager_name }}</td>
-              <td>{{ project.project_description }}</td>
-             
-              <td>{{ project.baseline_start_date }}</td>
-              <td>{{ project.baseline_end_date }}</td>
-              <td>{{ project.planned_start_date }}</td>
-              <td>{{project.planned_end_date}}</td>
-              <td>{{ project.created_by_name }}</td>
-              <td>{{ project.created_at }}</td>
-                   <td>{{ project.updated_at }}</td>
-              <td>{{ project.updated_by_name }}</td>
-         
-              <td>
-                <button class="btn-edit" (click)="openEditForm(project)">Edit</button>
-                <button class="btn-delete" (click)="openDeletePopup(project)">Archive</button>
+            <tr *ngFor="let emp of filteredEmployees">
+              <td>{{ emp.business_unit_name }}</td>
+              <td>{{ emp.business_unit_head_name }}</td>
+              <td>{{ emp.employee_full_name }}</td>
+              <td>{{ emp.employee_email_address }}</td>
+              <td>{{ emp.created_at }}</td>
+              <td>{{ emp.created_by_name }}</td>
+              <td>{{ emp.updated_at }}</td>
+              <td>{{ emp.updated_by_name }}</td>
+              <td class="form-buttons">
+                <button class="btn-edit" (click)="openEditForm(emp)">Edit</button>
+                <button class="btn-delete" (click)="openDeletePopup(emp)">Archive</button>
               </td>
             </tr>
           </tbody>
@@ -81,47 +70,31 @@
       </div>
     </div>
 
-    <!-- Create Form Modal -->
+    <!-- ADD EMPLOYEE FORM -->
     <div class="modal" *ngIf="showCreateForm">
       <div class="modal-content">
-        <h3>Add Project</h3>
-        <form (ngSubmit)="saveNewProject()">
-          <label>Project ID:</label>
-          <input type="text" [(ngModel)]="newProject.project_id" name="project_id" required>
+        <h3>Add New Employee</h3>
+        <form (ngSubmit)="saveNewEmployee()">
+          <label>Employee ID:</label>
+          <input type="text" [(ngModel)]="newEmployee.employee_id" name="add_employee_id" required>
 
-          <label>Project Name:</label>
-          <input type="text" [(ngModel)]="newProject.project_name" name="project_name" required>
+          <label>Full Name:</label>
+          <input type="text" [(ngModel)]="newEmployee.employee_full_name" name="add_employee_full_name" required>
 
-          <label>Project Description:</label>
-          <input type="text" [(ngModel)]="newProject.project_description" name="project_description" required>
+          <label>Email Address:</label>
+          <input type="email" [(ngModel)]="newEmployee.employee_email_address" name="add_employee_email_address" required>
 
-          <label>Business Unit:</label>
-          <select [(ngModel)]="newProject.business_unit_id" name="business_unit_id" required>
-            <option value="" disabled>Select BU</option>
+          <label>Password:</label>
+          <input type="password" [(ngModel)]="newEmployee.password" name="add_password" required>
+
+        
+          <label>Business Unit ID with Name:</label>
+          <select [(ngModel)]="newEmployee.business_unit_id" name="create_bu_id" required>
+            <option value="newBU.business_unit_id"></option>
             <option *ngFor="let bu of businessUnits()" [value]="bu.business_unit_id">
-              {{ bu.business_unit_name }}
+              {{ bu.business_unit_id }}  - {{bu.business_unit_name}}
             </option>
           </select>
-
-          <label>Delivery Manager:</label>
-          <select [(ngModel)]="newProject.delivery_manager_id" name="delivery_manager_id" required>
-            <option value="" disabled>Select Manager</option>
-            <option *ngFor="let emp of employees()" [value]="emp.employee_id">
-              {{ emp.employee_full_name }}
-            </option>
-          </select>
-
-          <label>Baseline Start Date:</label>
-          <input type="date" [(ngModel)]="newProject.baseline_start_date" name="baseline_start_date">
-
-          <label>Baseline End Date:</label>
-          <input type="date" [(ngModel)]="newProject.baseline_end_date" name="baseline_end_date">
-
-            <label>Planned Start Date:</label>
-          <input type="date" [(ngModel)]="newProject.planned_start_date" name="planned_start_date">
-
-            <label>Planned End Date:</label>
-          <input type="date" [(ngModel)]="newProject.planned_end_date" name="planned_end_date">
 
           <div class="form-buttons">
             <button type="submit" class="btn-save">Save</button>
@@ -131,47 +104,31 @@
       </div>
     </div>
 
-    <!-- Edit Form Modal -->
+    <!-- EDIT EMPLOYEE FORM -->
     <div class="modal" *ngIf="showEditForm">
       <div class="modal-content">
-        <h3>Edit Project</h3>
-        <form (ngSubmit)="saveEditProject()">
-          <label>Project ID:</label>
-          <input type="text" [(ngModel)]="editProjectModel.project_id" name="project_id" required disabled>
+        <h3>Edit Employee</h3>
+        <form (ngSubmit)="saveEditEmployee()">
+          <label>Employee ID:</label>
+          <input type="text" [(ngModel)]="editEmployeeModel.employee_id" name="edit_employee_id" required disabled>
 
-          <label>Project Name:</label>
-          <input type="text" [(ngModel)]="editProjectModel.project_name" name="project_name" required>
+          <label>Full Name:</label>
+          <input type="text" [(ngModel)]="editEmployeeModel.employee_full_name" name="edit_employee_full_name" required>
 
-          <label>Project Description:</label>
-          <input type="text" [(ngModel)]="editProjectModel.project_description" name="project_description" required>
+          <label>Email Address:</label>
+          <input type="email" [(ngModel)]="editEmployeeModel.employee_email_address" name="edit_employee_email_address" required>
 
-          <label>Business Unit:</label>
-          <select [(ngModel)]="editProjectModel.business_unit_id" name="business_unit_id" required>
-            <option value="" disabled>Select BU</option>
-            <option *ngFor="let bu of businessUnits()" [value]="bu.business_unit_id">
-              {{ bu.business_unit_name }}
-            </option>
-          </select>
+          <label>Business Unit ID:</label>
+          <input type="text" [(ngModel)]="editEmployeeModel.business_unit_id" name="edit_business_unit_id" required disabled>
 
-          <label>Delivery Manager:</label>
-          <select [(ngModel)]="editProjectModel.delivery_manager_id" name="delivery_manager_id" required>
-            <option value="" disabled>Select Manager</option>
-            <option *ngFor="let emp of employees()" [value]="emp.employee_id">
-              {{ emp.employee_full_name }}
-            </option>
-          </select>
+          <label>Business Unit Name:</label>
+          <input type="text" [(ngModel)]="editEmployeeModel.business_unit_name" name="edit_business_unit_name" required>
 
-          <label>Baseline Start Date:</label>
-          <input type="date" [(ngModel)]="editProjectModel.baseline_start_date" name="baseline_start_date">
+          <label>Business Unit Head ID:</label>
+          <input type="text" [(ngModel)]="editEmployeeModel.business_unit_head_id" name="edit_business_unit_head_id" disabled>
 
-          <label>Baseline End Date:</label>
-          <input type="date" [(ngModel)]="editProjectModel.baseline_end_date" name="baseline_end_date">
-
-          <label>Planned Start Date:</label>
-          <input type="date" [(ngModel)]="editProjectModel.planned_start_date" name="planned_start_date">
-
-          <label>Planned End Date:</label>
-          <input type="date" [(ngModel)]="editProjectModel.planned_end_date" name="planned_end_date">
+          <label>Business Unit Head Name:</label>
+          <input type="text" [(ngModel)]="editEmployeeModel.business_unit_head_name" name="edit_business_unit_head_name" disabled>
 
           <div class="form-buttons">
             <button type="submit" class="btn-save">Update</button>
@@ -181,18 +138,17 @@
       </div>
     </div>
 
-    <!-- Delete Confirmation Modal -->
+    <!-- DELETE CONFIRMATION MODAL -->
     <div class="modal" *ngIf="showDeletePopup">
       <div class="modal-content">
-        <h3>Archive Project</h3>
-        <p>Are you sure you want to archive Project: <strong>{{ selectedProject?.project_name }}</strong>?</p>
+        <h3>Archive Employee</h3>
+        <p>Are you sure you want to archive Employee: <strong>{{ selectedEmployee?.employee_full_name }}</strong>?</p>
         <div class="form-buttons">
           <button class="btn-delete" (click)="confirmDelete()">Yes, Archive</button>
           <button class="btn-cancel" (click)="cancelForms()">Cancel</button>
         </div>
       </div>
     </div>
-
   </div>
 </div>
 

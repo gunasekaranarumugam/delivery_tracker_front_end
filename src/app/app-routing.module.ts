@@ -1,8 +1,8 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import {LoginComponent} from "./auth/login/login.component";
-import {BusinessunitComponent} from "./BU/businessunit/businessunit.component";
-import {UserComponent} from "./BU/User/user.component";
+import {BusinessUnitComponent} from "./BU/businessunit/businessunit.component";
+import {EmployeeComponent} from "./BU/employee/employee.component";
 import {ProjectComponent} from "./project/project.component";
 import {DeliverableComponent} from "./deliverable/deliverable.component";
 import {TaskComponent} from "./task/task.component";
@@ -11,8 +11,8 @@ import {TimesheetComponent} from "./timesheet/timesheet.component";
 
 const routes: Routes = [
   { path: 'login', component: LoginComponent },
-  {path:'bu', component:BusinessunitComponent},
-  {path:'user',component:UserComponent},
+  {path:'bu', component:BusinessUnitComponent},
+  {path:'employee',component:EmployeeComponent},
   {path:'project',component:ProjectComponent},
   {path:'deliverable',component:DeliverableComponent},
   {path:'tasks',component:TaskComponent},

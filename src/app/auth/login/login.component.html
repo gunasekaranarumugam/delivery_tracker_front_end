@@ -3,24 +3,32 @@
 <div class="login-wrapper">
   <div class="login-card">
     <div class="login-header">
-      <h2>Welcome 👋</h2>
+      <h2>Welcome</h2>
       <p>Please sign in to continue</p>
+    </div>
+
+    <!-- Dynamic Data Section -->
+    <div *ngIf="tips && tips.length" class="login-tips">
+      <h4>Login Tips:</h4>
+      <ul>
+        <li *ngFor="let tip of tips">{{ tip }}</li>
+      </ul>
     </div>
 
     <form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="login-form">
       <div class="form-group">
-        <label for="username">Username</label>
+        <label for="username">Employee Email as Username</label>
         <input
           id="username"
           name="username"
           [(ngModel)]="username"
-          placeholder="Enter your username"
+          placeholder="Enter your username as email"
           required
         />
       </div>
 
       <div class="form-group">
-        <label for="password">Password</label>
+        <label for="password">Employee Password</label>
         <input
           id="password"
           name="password"
@@ -36,10 +44,11 @@
       <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
     </form>
 
-<!--    <div class="login-footer">-->
-<!--      <p>Forgot your password? <a href="#">Reset here</a></p>-->
-<!--    </div>-->
+    <!-- Optional Footer -->
+<!--
+    <div class="login-footer">
+      <p>Forgot your password? <a href="#">Reset here</a></p>
+    </div>
+-->
   </div>
 </div>
-
-

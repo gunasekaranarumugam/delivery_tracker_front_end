@@ -1,67 +1,314 @@
 <app-page-header></app-page-header>
-
 <div class="layout">
   <app-sidebar></app-sidebar>
+
   <div class="content">
     <div class="card">
+      <!-- Card Header -->
       <div class="card-header">
         <h2>Business Units</h2>
-        <button class="btn-add" (click)="openAddForm()">+ Add New</button>
+        <button class="btn-cancel" (click)="openCreateForm()">+ Add New</button>
       </div>
 
-      <table class="table">
-        <thead>
-        <tr>
-<!--          <th>ID</th>-->
-          <th>Name</th>
-          <th>Business Unit Lead</th>
-          <th>Action</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr *ngFor="let bu of bu_items">
-<!--          <td>{{ bu.id }}</td>-->
-          <td>{{ bu.name }}</td>
-          <td>{{ bu.lead }}</td>
-          <td>
-            <button class="btn-edit" (click)="editBU(bu)">Edit</button>
-            <button class="btn-delete" (click)="openDeletePopup(bu)">Delete</button>
-          </td>
-        </tr>
-        </tbody>
-      </table>
+      <!-- Loading/Error -->
+      <div *ngIf="buLoading()" class="loading">Loading Business Units...</div>
+      <div *ngIf="buError()" class="error">Error: Could not load data.</div>
+
+      <!-- Business Unit Table -->
+      <div class="table-container" *ngIf="!buLoading()">
+        <table class="table">
+          <thead>
+            <tr>
+              <th *ngFor="let col of columns">
+                <div class="th-container">
+                    <span>{{ columnLabels[col] || (col.replace('_', ' ') | titlecase) }}</span>
+                  <div class="filter-wrapper">
+                    <button class="filter-btn" 
+                            [class.active]="activeFilter === col"
+                            (click)="toggleFilter(col)">
+                      <span class="arrow" [class.open]="activeFilter === col">▼</span>
+                    </button>
+                    <div class="filter-dropdown" *ngIf="activeFilter === col">
+                      <ul>
+                        <li *ngFor="let option of getUniqueOptions(col)" 
+                            [class.selected]="isSelected(col, option)">
+                          <label>
+                            <input type="checkbox"
+                                   [checked]="isSelected(col, option)"
+                                   (change)="toggleSelection(col, option)">
+                            {{ option }}
+                          </label>
+                        </li>
+                      </ul>
+                      <div class="filter-actions">
+                        <button class="btn-clear" (click)="clearAllFilters()">Clear</button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let bu of filteredBUs">
+              <td>{{ bu.business_unit_name }}</td>
+              <td>{{ bu.business_unit_head_name }}</td>
+              <td>{{ bu.business_unit_description }}</td>
+              <td>{{ bu.created_by_name }}</td>
+              <td>{{ bu.created_at }}</td>
+              <td>{{ bu.updated_at }}</td>
+              <td>{{ bu.updated_by_name }}</td>
+              <td class="form-buttons">
+                <button class="btn-edit" (click)="openEditForm(bu)">Edit</button>
+                <button class="btn-delete" (click)="openDeletePopup(bu)">Archive</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
     </div>
 
-    <!-- Add New Business Unit Form -->
-    <div class="modal" *ngIf="showForm">
+    <!-- CREATE FORM Modal -->
+    <div class="modal" *ngIf="showCreateForm">
       <div class="modal-content">
-        <h3>{{ editMode ? 'Edit Business Unit' : 'Add New Business Unit' }}</h3>
-        <form (ngSubmit)="saveBusinessUnit()">
-          <label>Name:</label>
-          <input type="text" [(ngModel)]="newBU.name" name="name" required>
+        <h3>Add Business Unit</h3>
+        <form (ngSubmit)="saveNewBU()">
+         
+           <label>Business Unit ID:</label>
+          <input type="text" [(ngModel)]="newBU.business_unit_id" name="create_id" required>
 
-          <label>Lead:</label>
-          <input type="text" [(ngModel)]="newBU.lead" name="lead" required>
+         
+
+          <label>Business Unit Name:</label>
+          <input type="text" [(ngModel)]="newBU.business_unit_name" name="create_name" required>
+
+          <label>Business Unit Description:</label>
+          <input type="text" [(ngModel)]="newBU.business_unit_description" name="create_desc" required>
+
+         
+           <label>Business Unit Head:</label>
+          <select [(ngModel)]="newBU.business_unit_head_id" name="create_head" required>
+            <option value="newBU.business_unit_head_id"></option>
+            <option *ngFor="let emp of employees()" [value]="emp.employee_id">
+              {{ emp.employee_full_name }} 
+            </option>
+          </select>
 
           <div class="form-buttons">
-            <button type="submit" class="btn-save">
-              {{ editMode ? 'Update' : 'Save' }}
-            </button>
-            <button type="button" class="btn-cancel" (click)="cancel()">Cancel</button>
+            <button type="submit" class="btn-save">Save</button>
+            <button type="button" class="btn-cancel" (click)="cancelForms()">Cancel</button>
           </div>
         </form>
       </div>
     </div>
 
+    <!-- EDIT FORM Modal -->
+    <div class="modal" *ngIf="showEditForm">
+      <div class="modal-content">
+        <h3>Edit Business Unit</h3>
+        <form (ngSubmit)="saveEditBU()">
+          <label>Business Unit ID:</label>
+          <input type="text" [(ngModel)]="editBUModel.business_unit_id" name="edit_id" required disabled>
+
+          <label>Business Unit Name:</label>
+          <input type="text" [(ngModel)]="editBUModel.business_unit_name" name="edit_name" required>
+
+          <label>Business Unit Description:</label>
+          <input type="text" [(ngModel)]="editBUModel.business_unit_description" name="edit_desc" required>
+
+         <label>Business Unit Head Name:</label>
+          <select [(ngModel)]="editBUModel.business_unit_head_id" name="edit_head" required>
+            <option value="editBUModel.business_unit_head_name"></option>
+            <option *ngFor="let emp of employees()" [value]="emp.employee_id">
+              {{ emp.employee_full_name }}
+            </option>
+          </select>
+
+          <div class="form-buttons">
+            <button type="submit" class="btn-save">Update</button>
+            <button type="button" class="btn-cancel" (click)="cancelForms()">Cancel</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- DELETE CONFIRMATION Modal -->
     <div class="modal" *ngIf="showDeletePopup">
       <div class="modal-content">
-        <h3>Delete Business Unit</h3>
-        <p>Are you sure you want to delete <strong>{{ selectedBU?.name }}</strong>?</p>
+        <h3>Archive Business Unit</h3>
+        <p>Are you sure you want to archive Business Unit: <strong>{{ selectedBU?.business_unit_name }}</strong>?</p>
         <div class="form-buttons">
-          <button class="btn-delete" (click)="confirmDelete()">Yes, Delete</button>
-          <button class="btn-cancel" (click)="cancelDelete()">Cancel</button>
+          <button class="btn-delete" (click)="confirmDelete()">Yes, Archive</button>
+          <button class="btn-cancel" (click)="cancelForms()">Cancel</button>
         </div>
       </div>
     </div>
-    </div>
+  </div>
 </div>
+
+
+<style>
+/* Card */
+.card {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+  padding: 16px;
+  margin-bottom: 24px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.card-header h2 {
+  font-weight: 400;
+}
+
+/* Buttons */
+.btn-add, .btn-edit, .btn-delete, .btn-save, .btn-cancel {
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-add { background: #007bff; color: #fff; }
+.btn-add:hover { background: #0056b3; }
+
+.btn-edit { background: #ffc107; color: #000; margin-right: 4px; }
+.btn-edit:hover { background: #e0a800; }
+
+.btn-delete { background: #dc3545; color: #fff; }
+.btn-delete:hover { background: #c82333; }
+
+.btn-save { background: #28a745; color: #fff; }
+.btn-save:hover { background: #218838; }
+
+.btn-cancel { background: #6c757d; color: #fff; }
+.btn-cancel:hover { background: #5a6268; }
+
+/* Table */
+.table-container { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; }
+.table th, .table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+.table th { background: #f8f9fa; position: relative; }
+.th-container { display: flex; align-items: center; justify-content: space-between; }
+
+/* Filter Button */
+.filter-wrapper { position: relative; }
+.filter-btn {
+  background: #fff;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.filter-btn:hover, .filter-btn.active {
+  border-color: #007bff;
+  color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+}
+.arrow { transition: transform 0.2s ease; }
+.arrow.open { transform: rotate(180deg); }
+
+/* Dropdown */
+.filter-dropdown {
+  position: absolute;
+  top: 36px;
+  right: 0;
+  width: 220px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  z-index: 1000;
+  max-height: 250px;
+  overflow-y: auto;
+  padding: 10px 0;
+}
+.filter-dropdown ul { list-style: none; margin: 0; padding: 0; }
+.filter-dropdown li {
+  padding: 6px 16px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  border-radius: 4px;
+}
+.filter-dropdown li:hover { background: #f1f5f9; }
+.filter-dropdown li.selected { background: #e7f1ff; }
+.filter-dropdown input[type="checkbox"] { margin-right: 8px; accent-color: #007bff; }
+.filter-actions { display: flex; justify-content: flex-end; padding: 6px 16px; }
+.btn-clear { background: transparent; border: none; color: #007bff; cursor: pointer; font-size: 12px; }
+.btn-clear:hover { text-decoration: underline; }
+
+
+/* Optional: same colors as before */
+.btn-edit { background: #ffc107; color: #000; }
+.btn-edit:hover { background: #e0a800; }
+
+.btn-delete { background: #dc3545; color: #fff; }
+.btn-delete:hover { background: #c82333; }
+
+
+/* Modal */
+.modal {
+  position: fixed;
+  top:0; left:0; right:0; bottom:0;
+  background: rgba(0,0,0,0.4);
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  z-index: 2000;
+}
+.modal-content {
+  background:#fff;
+  padding:24px;
+  border-radius:8px;
+  width: 400px;
+  max-width: 90%;
+}
+.modal-content h3 { margin-top:0; }
+.modal-content label { display:block; margin-top:12px; }
+.modal-content input { width:100%; padding:6px 10px; margin-top:4px; border-radius:4px; border:1px solid #ccc; }
+.form-buttons {margin-top:16px; display:flex; justify-content:flex-end; gap:8px; }
+
+/* Action Buttons in Table */
+.table td button {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  margin-right: 17px;
+
+}
+
+.table td .btn-edit { 
+  background: #ffc107; 
+  color: #000; 
+  padding: 10px;
+
+}
+.table td .btn-edit:hover { background: #e0a800; }
+
+.table td .btn-delete { 
+  background: #dc3545; 
+  color: #fff; 
+  padding: 10px;
+
+}
+.table td .btn-delete:hover { background: #c82333; }
+
+
+
+
+</style>

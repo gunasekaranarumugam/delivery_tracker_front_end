@@ -1,96 +1,211 @@
-import {Component, inject} from '@angular/core';
-import {DataService} from "../data.service";
-import {Deliverable} from "../model/Deliverable";
-import {Project} from "../model/Project";
-import {Timesheet} from "../model/Timesheet";
-import {Time} from "@angular/common";
-import {Task} from "../model/Task";
-import {User} from "../model/User";
+import { Component, OnInit, inject, Signal } from '@angular/core';
+import { DataService } from '../data.service';
+import { Timesheet, TimesheetCreate, TimesheetUpdate } from '../model/Timesheet';
+import { Task } from '../model/Task';
 
 @Component({
   selector: 'app-timesheet',
   templateUrl: './timesheet.component.html',
-  styleUrls: ['./timesheet.component.scss']
+  styleUrls: ['./timesheet.component.scss'],
 })
-export class TimesheetComponent {
-  showForm = false;
-  ds = inject(DataService);
-  timesheets: Timesheet[] = [];
-  selectedTimesheet: Timesheet | null = null;
+export class TimesheetComponent implements OnInit {
+  private ds = inject(DataService);
+
+  // --- Signals from DataService ---
+  timesheets: Signal<Timesheet[]> = this.ds.timesheets;
+  timesheetLoading: Signal<boolean> = this.ds.timesheetLoading;
+  timesheetError: Signal<string | null> = this.ds.timesheetError;
+  tasks: Signal<Task[]> = this.ds.tasks;
+
+  // --- Component State ---
+  showAddForm = false;
+  showEditForm = false;
   showDeletePopup = false;
-  editMode = false;
-  selectedId: string = "";
-  taskList:Task[]=this.ds.getTasks();
-  userList:User[]=this.ds.getUsers();
-  newTimesheet: Partial<Timesheet> = {taskid: '', employee:'', workDate:'', progressPercentage:0,remark:''};
+
+  selectedTimesheet: Timesheet | null = null;
+  editingTimesheetId: string | null = null;
+
+  // --- Form Models ---
+  newTimesheet: TimesheetCreate = {
+    task_status_id: '',
+    task_id: '',
+    action_date: '',
+    hours_spent: '',
+    progress: '',
+    remarks: '',
+  };
+
+  editTimesheetModel: TimesheetUpdate = {
+    business_unit_id: '',
+    business_unit_name: '',
+    business_unit_head_id: '',
+    business_unit_head_name: '',
+    project_id: '',
+    task_status_id:'',
+    project_name: '',
+    delivery_manager_id: '',
+    delivery_manager_name: '',
+    deliverable_name: '',
+    deliverable_id: '',
+    task_name: '',
+    task_id: '',
+    action_date: '',
+    progress: '',
+    remarks: '',
+    hours_spent: ''
+  };
+
+  // --- Table columns & filters ---
+  columns: (keyof Timesheet)[] = [
+    'business_unit_name',
+    'business_unit_head_name',
+    'project_name',
+    'delivery_manager_name',
+    'deliverable_name',
+    'task_name',
+    'action_date',
+    'progress',
+    'remarks',
+    'created_at',
+    'created_by_name',
+    'updated_at',
+    'updated_by_name',
+  ];
+
+   columnLabels: Record<string, string> = {
+  business_unit_name: 'BU',
+  business_unit_head_name: 'BU Head',
+  project_name: 'Project',
+  delivery_manager_name: 'DM',
+  deliverable_name: 'Deliverable',
+  task_name: 'Task',
+  action_date: 'Action Date',
+  progress: 'Progress',
+  remarks: 'Remarks',
+  created_at: 'Created At',
+  created_by_name: 'Created By',
+  updated_at: 'Updated At',
+  updated_by_name: 'Updated By'
+};
+
+
+  activeFilter: keyof Timesheet | null = null;
+  selectedFilters: Partial<Record<keyof Timesheet, string[]>> = {};
+
   ngOnInit(): void {
-    this.timesheets = this.ds.timesheets();
+    this.ds.fetchTimesheets().subscribe();
+    this.ds.fetchTasks().subscribe();
   }
-  openAddForm() {
-    this.showForm = true;
-    this.editMode = false;
-    this.newTimesheet = {taskid: '', employee:'', workDate:'', progressPercentage:0,remark:''};
-  }
-  cancel() {
-    this.showForm = false;
-    this.selectedId;
-    this.newTimesheet = {taskid: '', employee:'', workDate:'', progressPercentage:0,remark:''};
-  }
-  // Save or update user
-  saveTimesheet() {
-    let updatedList: Timesheet[];
 
-    if (this.editMode && this.selectedId) {
-      updatedList = this.ds.getTimesheets().map(timesheet =>
-        timesheet.id === this.selectedId ? { ...timesheet, ...this.newTimesheet } as Timesheet : timesheet
-      );
-    } else {
-      const newItem: Timesheet = {
-        id: `timesheet${this.ds.getTimesheets().length + 1}`,
-        taskid:this.newTimesheet.taskid!,
-        employee: this.newTimesheet.employee!,
-        workDate:this.newTimesheet.workDate!,
-        progressPercentage: this.newTimesheet.progressPercentage!,
-        remark:this.newTimesheet.remark!,
-      };
+  // --- Filter Helpers ---
+  get filteredTimesheets(): Timesheet[] {
+    let list = this.timesheets();
+    for (const key in this.selectedFilters) {
+      const k = key as keyof Timesheet;
+      const values = this.selectedFilters[k];
+      if (values?.length) {
+        list = list.filter((ts) => values.includes(ts[k]!));
+      }
+    }
+    return list;
+  }
 
-      updatedList = [...this.ds.timesheets(), newItem];
+  toggleFilter(column: keyof Timesheet) {
+    this.activeFilter = this.activeFilter === column ? null : column;
+  }
+
+  getUniqueOptions(column: keyof Timesheet): string[] {
+    const values = this.timesheets().map((ts) => ts[column] || '');
+    return Array.from(new Set(values));
+  }
+
+  isSelected(column: keyof Timesheet, value: string): boolean {
+    return this.selectedFilters[column]?.includes(value) ?? false;
+  }
+
+  toggleSelection(column: keyof Timesheet, value: string) {
+    if (!this.selectedFilters[column]) this.selectedFilters[column] = [];
+    const idx = this.selectedFilters[column]!.indexOf(value);
+    idx > -1
+      ? this.selectedFilters[column]!.splice(idx, 1)
+      : this.selectedFilters[column]!.push(value);
+  }
+
+  clearAllFilters() {
+    this.selectedFilters = {};
+  }
+
+  get hasActiveFilters(): boolean {
+    return Object.values(this.selectedFilters).some((arr) => arr && arr.length > 0);
+  }
+
+  // --- CRUD Methods ---
+  
+  // --- CREATE FORM ---
+  openAddForm(): void {
+    this.showAddForm = true;
+    this.showEditForm = false;
+    this.newTimesheet = {
+      task_status_id: '',
+      task_id: '',
+      action_date: '',
+      hours_spent: '',
+      progress: '',
+      remarks: '',
+    };
+    this.editingTimesheetId = null;
+  }
+
+  saveNewTimesheet(): void {
+    if (!this.newTimesheet.task_id || !this.newTimesheet.action_date) {
+      console.error('Task and Action Date are required.');
+      return;
     }
 
-    this.ds.updateTimesheets(updatedList);
-
-    this.timesheets = this.ds.getTimesheets();
-    this.cancel();
+    this.ds.createTimesheet(this.newTimesheet).subscribe({
+      next: () => this.cancelForms(),
+      error: (err) => console.error('Creation failed:', err),
+    });
   }
 
-  // Edit existing user
-  editUser(timesheet: Timesheet) {
-    this.showForm = true;
-    this.editMode = true;
-    this.selectedId = timesheet.id!;
-    this.newTimesheet = { ...timesheet };
+  // --- EDIT FORM ---
+  openEditForm(ts: Timesheet): void {
+    this.showEditForm = true;
+    this.showAddForm = false;
+    this.editingTimesheetId = ts.task_status_id;
+    this.editTimesheetModel = { ...ts } as TimesheetUpdate;
   }
 
-  // Open delete confirmation popup
-  openDeletePopup(timesheet: Timesheet) {
-    this.selectedTimesheet = timesheet;
+  saveEditTimesheet(): void {
+    if (!this.editingTimesheetId) return;
+
+    this.ds.updateTimesheet(this.editingTimesheetId, this.editTimesheetModel).subscribe({
+      next: () => this.cancelForms(),
+      error: (err) => console.error('Update failed:', err),
+    });
+  }
+
+  // --- DELETE ---
+  openDeletePopup(ts: Timesheet): void {
+    this.selectedTimesheet = ts;
     this.showDeletePopup = true;
   }
 
-  // Confirm delete
-  confirmDelete() {
-    if (!this.timesheets) return;
-
-    const updatedList = this.ds.timesheets().filter(item => item.id !== this.selectedTimesheet!.id);
-    this.ds.updateTimesheets(updatedList);
-
-    this.timesheets = this.ds.getTimesheets();
-    this.showDeletePopup = false;
-    this.selectedTimesheet = null;
+  confirmDelete(): void {
+    if (this.selectedTimesheet?.task_status_id) {
+      this.ds.deleteTimesheet(this.selectedTimesheet.task_status_id).subscribe({
+        next: () => this.cancelForms(),
+        error: (err) => console.error('Delete failed:', err),
+      });
+    }
   }
-  // Cancel delete
-  cancelDelete() {
+
+  // --- CANCEL ---
+  cancelForms(): void {
+    this.showAddForm = false;
+    this.showEditForm = false;
     this.showDeletePopup = false;
     this.selectedTimesheet = null;
+    this.editingTimesheetId = null;
   }
 }
