@@ -7,28 +7,21 @@
       <p>Please sign in to continue</p>
     </div>
 
-    <!-- Dynamic Data Section -->
-    <div *ngIf="tips && tips.length" class="login-tips">
-      <h4>Login Tips:</h4>
-      <ul>
-        <li *ngFor="let tip of tips">{{ tip }}</li>
-      </ul>
-    </div>
-
     <form (ngSubmit)="onSubmit()" #loginForm="ngForm" class="login-form">
       <div class="form-group">
-        <label for="username">Employee Email as Username</label>
+        <label for="username">Email Address</label>
         <input
           id="username"
           name="username"
+          type="text"
           [(ngModel)]="username"
-          placeholder="Enter your username as email"
+          placeholder="Enter your email address"
           required
         />
       </div>
 
       <div class="form-group">
-        <label for="password">Employee Password</label>
+        <label for="password">Password</label>
         <input
           id="password"
           name="password"
@@ -39,7 +32,7 @@
         />
       </div>
 
-      <button type="submit" [disabled]="!loginForm.valid">Login</button>
+      <button type="submit">Login</button>
 
       <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
     </form>

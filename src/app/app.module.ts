@@ -36,7 +36,6 @@ import { TokenInterceptor } from './auth/token.interceptor'; // ✅ Correct impo
   ],
   imports: [
     BrowserModule,
-    CommonModule,
     FormsModule,
     NgSelectModule,
     HttpClientModule,
