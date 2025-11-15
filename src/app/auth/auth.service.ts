@@ -22,7 +22,7 @@ export class AuthService {
   public isLoggedIn$ = new BehaviorSubject<boolean>(this.hasToken());
 
   constructor(private http: HttpClient) {}
-login(email: string, password: string): Observable<LoginResponse> {
+  login(email: string, password: string): Observable<LoginResponse> {
   const body = new URLSearchParams();
   body.set('username', email);  // ⚠ FastAPI OAuth2 expects "username"
   body.set('password', password);
@@ -53,12 +53,6 @@ login(email: string, password: string): Observable<LoginResponse> {
       }
     }),
     catchError(err => {
-      // Show backend message to user
-      if (err.error?.detail) {
-        alert(err.error.detail); // e.g. "Employee is archived and cannot login"
-      } else {
-        alert("Login failed"); // fallback message
-      }
       return throwError(() => err);
     })
   );
@@ -84,17 +78,21 @@ login(email: string, password: string): Observable<LoginResponse> {
     return localStorage.getItem(this.tokenKey);
   }
 
-  getAuthenticatedUser() {
-  return {
-    employee_name: localStorage.getItem('employee_name'),
-    employee_email: localStorage.getItem('employee_email'),
-    business_unit_id: localStorage.getItem('business_unit_id'),
-    business_unit_name: localStorage.getItem('business_unit_name'),
-    token: localStorage.getItem(this.tokenKey)
-  };
-}
-
-
+  getAuthenticatedUser(): {
+    employee_full_name: string | null;
+    employee_email: string | null;
+    business_unit_id: string | null;
+    business_unit_name: string | null;
+    token: string | null;
+  } {
+    return {
+      employee_full_name: localStorage.getItem('employee_name'),
+      employee_email: localStorage.getItem('employee_email'),
+      business_unit_id: localStorage.getItem('business_unit_id'),
+      business_unit_name: localStorage.getItem('business_unit_name'),
+      token: localStorage.getItem(this.tokenKey)
+    };
+  }
   private hasToken(): boolean {
     return !!localStorage.getItem(this.tokenKey);
   }
