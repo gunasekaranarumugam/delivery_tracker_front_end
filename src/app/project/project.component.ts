@@ -128,10 +128,19 @@ export class ProjectComponent implements OnInit {
     } else {
       this.selectedFilters[column]!.push(value);
     }
+    this.activeFilter = null;
   }
 
   clearAllFilters() {
     this.selectedFilters = {};
+  }
+
+  hasFilter(column: keyof Project): boolean {
+    return !!(this.selectedFilters[column] && this.selectedFilters[column]!.length > 0);
+  }
+
+  getFilterCount(column: keyof Project): number {
+    return this.selectedFilters[column]?.length || 0;
   }
 
   get hasActiveFilters(): boolean {

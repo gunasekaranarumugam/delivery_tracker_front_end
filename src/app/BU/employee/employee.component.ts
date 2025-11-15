@@ -98,7 +98,22 @@ export class EmployeeComponent implements OnInit {
 
   ngOnInit(): void {
     this.ds.fetchBU().subscribe();
-    this.ds.fetchEmployees().subscribe();
+    this.ds.fetchEmployees().subscribe(() => {
+      this.applyDefaultFilters();
+    });
+  }
+
+  applyDefaultFilters(): void {
+    const user = this.auth.getAuthenticatedUser();
+    if (user) {
+      // Apply default filter for Employee column based on user's full name
+      if (user.employee_full_name) {
+        this.selectedFilters['employee_full_name'] = [user.employee_full_name];
+      }
+    }
+
+    console.log('Applied default filters:', this.selectedFilters);
+    console.log('User details:', user);
   }
 
   // --- Filtered list ---
@@ -135,10 +150,21 @@ export class EmployeeComponent implements OnInit {
     const idx = this.selectedFilters[column]!.indexOf(value);
     if (idx > -1) this.selectedFilters[column]!.splice(idx, 1);
     else this.selectedFilters[column]!.push(value);
+
+    // Close the filter dropdown after selection
+    this.activeFilter = null;
   }
 
   clearAllFilters() {
     this.selectedFilters = {};
+  }
+
+  hasFilter(column: keyof Employee): boolean {
+    return !!(this.selectedFilters[column] && this.selectedFilters[column]!.length > 0);
+  }
+
+  getFilterCount(column: keyof Employee): number {
+    return this.selectedFilters[column]?.length || 0;
   }
 
   get hasActiveFilters(): boolean {

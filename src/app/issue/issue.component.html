@@ -9,7 +9,7 @@
       <div class="card-header">
         <h2>Issues</h2>
         <button class="btn-cancel" (click)="openAddForm()">+ Add New</button>
-        
+
       </div>
 
       <!-- Loading/Error -->
@@ -25,14 +25,16 @@
                 <div class="th-container">
                 <span>{{ columnLabels[col] || (col.replace('_', ' ') | titlecase) }}</span>
                   <div class="filter-wrapper">
-                    <button class="filter-btn" 
+                    <button class="filter-btn"
                             [class.active]="activeFilter === col"
+                            [class.has-filter]="hasFilter(col)"
                             (click)="toggleFilter(col)">
                       <span class="arrow" [class.open]="activeFilter === col">▼</span>
+                      <span class="filter-badge" *ngIf="hasFilter(col)">{{ getFilterCount(col) }}</span>
                     </button>
                     <div class="filter-dropdown" *ngIf="activeFilter === col">
                       <ul>
-                        <li *ngFor="let option of getUniqueOptions(col)" 
+                        <li *ngFor="let option of getUniqueOptions(col)"
                             [class.selected]="isSelected(col, option)">
                           <label>
                             <input type="checkbox"
@@ -63,7 +65,7 @@
               <td>{{ issue.action_owner_name }}</td>
               <td [ngStyle]="{
                     color: issue.issue_priority === 'High' ? 'red' :
-                           issue.issue_priority === 'Medium' ? 'orange' : 
+                           issue.issue_priority === 'Medium' ? 'orange' :
                            issue.issue_priority === 'Low' ? 'green' : 'black'
                    }">
                 {{ issue.issue_priority }}
@@ -96,9 +98,9 @@
               <label>Issue Title:</label>
               <input type="text" [(ngModel)]="newIssue.issue_title" name="issue_title" required>
 
-           
 
-            
+
+
 
               <label>Task:</label>
               <select [(ngModel)]="newIssue.task_id" name="task_id" required>
@@ -153,7 +155,7 @@
              <label>BU :</label>
               <select [(ngModel)]="newIssue.business_unit_name" name="business_unit_name" required>
                 <option *ngFor="let b of bus()" [value]="b.business_unit_name">{{ b.business_unit_name }}</option>
-               
+
               </select>
 
 
@@ -250,29 +252,188 @@
 .btn-cancel { background: #6c757d; color: #fff; }
 .btn-cancel:hover { background: #5a6268; }
 
-.table-container { overflow-x: auto; }
+.table-container { overflow-x: auto; overflow-y: visible; }
 .table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; }
 .table th, .table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e0e0e0; }
-.table th { background: #f8f9fa; position: relative; }
-.th-container { display: flex; align-items: center; justify-content: space-between; }
+.table th { background: #f8f9fa; position: relative; overflow: visible; }
+.th-container { display: flex; align-items: center; justify-content: space-between; position: relative; }
 
-.filter-wrapper { position: relative; }
-.filter-btn { background: #fff; border: 1px solid #ccc; border-radius: 6px; padding: 4px 10px; font-size: 13px; display: flex; align-items: center; gap: 6px; cursor: pointer; transition: all 0.2s ease; }
-.filter-btn:hover, .filter-btn.active { border-color: #007bff; color: #007bff; box-shadow: 0 0 0 2px rgba(0,123,255,0.25); }
-.arrow { transition: transform 0.2s ease; }
+.filter-wrapper { position: relative; margin-left: 8px; z-index: 100; }
+.filter-btn {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  position: relative;
+}
+.filter-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
+}
+.filter-btn.active {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.5);
+}
+.filter-btn.has-filter {
+  background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+  box-shadow: 0 2px 8px rgba(245, 87, 108, 0.4);
+}
+.filter-btn.has-filter:hover {
+  box-shadow: 0 4px 12px rgba(245, 87, 108, 0.6);
+}
+.arrow {
+  transition: transform 0.3s ease;
+  font-size: 10px;
+}
 .arrow.open { transform: rotate(180deg); }
 
-.filter-dropdown {
-  position: absolute; top: 36px; right: 0; width: 220px; background: #fff; border: 1px solid #ddd; border-radius: 8px; box-shadow: 0 6px 18px rgba(0,0,0,0.15); z-index: 1000; max-height: 250px; overflow-y: auto; padding: 10px 0;
+.filter-badge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: #ff4757;
+  color: #fff;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: bold;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  animation: pulse 2s infinite;
 }
-.filter-dropdown ul { list-style: none; margin: 0; padding: 0; }
-.filter-dropdown li { padding: 6px 16px; display: flex; align-items: center; cursor: pointer; border-radius: 4px; }
-.filter-dropdown li:hover { background: #f1f5f9; }
-.filter-dropdown li.selected { background: #e7f1ff; }
-.filter-dropdown input[type="checkbox"] { margin-right: 8px; accent-color: #007bff; }
-.filter-actions { display: flex; justify-content: flex-end; padding: 6px 16px; }
-.btn-clear { background: transparent; border: none; color: #007bff; cursor: pointer; font-size: 12px; }
-.btn-clear:hover { text-decoration: underline; }
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+.filter-dropdown {
+  position: fixed;
+  margin-top: 42px;
+  width: 280px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+  z-index: 9999;
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 0;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filter-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+.filter-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+.filter-dropdown::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 10px;
+}
+.filter-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.filter-dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
+}
+
+.filter-dropdown li {
+  padding: 0;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 2px 8px;
+  border-radius: 6px;
+}
+
+.filter-dropdown li label {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  padding: 10px 12px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #333;
+  word-break: break-word;
+}
+
+.filter-dropdown li:hover {
+  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+}
+
+.filter-dropdown li.selected {
+  background: linear-gradient(135deg, #e0f7ff 0%, #d4edff 100%);
+  border-left: 3px solid #007bff;
+}
+
+.filter-dropdown input[type="checkbox"] {
+  margin-right: 10px;
+  accent-color: #007bff;
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+}
+
+.filter-actions {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-top: 1px solid #e0e0e0;
+  background: #f8f9fa;
+  border-radius: 0 0 12px 12px;
+}
+
+.btn-clear {
+  background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
+  border: none;
+  color: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  padding: 6px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.btn-clear:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
+}
 
 .modal { position: fixed; top:0; left:0; right:0; bottom:0; background: rgba(0,0,0,0.4); display:flex; justify-content:center; align-items:center; z-index: 2000; }
 .modal-content { background:#fff; padding:24px; border-radius:8px; width: 400px; max-width: 90%; max-height: 90vh;

@@ -166,10 +166,19 @@ export class TaskComponent implements OnInit {
     const idx = this.selectedFilters[column]!.indexOf(value);
     if (idx > -1) this.selectedFilters[column]!.splice(idx, 1);
     else this.selectedFilters[column]!.push(value);
+    this.activeFilter = null;
   }
 
   clearAllFilters() {
     this.selectedFilters = {};
+  }
+
+  hasFilter(column: keyof Task): boolean {
+    return (this.selectedFilters[column]?.length ?? 0) > 0;
+  }
+
+  getFilterCount(column: keyof Task): number {
+    return this.selectedFilters[column]?.length ?? 0;
   }
 
   // --- CREATE FORM ---
