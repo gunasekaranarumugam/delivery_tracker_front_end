@@ -25,9 +25,12 @@
 
   .logo {
     height: 70px;
-    width: auto;
-    object-fit: cover;
     width: 250px;
+    object-fit: cover;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 2px solid rgba(255, 255, 255, 0.3);
   }
 
   .page-title {
