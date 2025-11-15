@@ -35,19 +35,20 @@
 
                     <div class="filter-dropdown" *ngIf="activeFilter === col">
                       <ul>
-                        <li *ngFor="let option of getUniqueOptions(col)">
+                        <li *ngFor="let option of getUniqueOptions(col)" 
+                            [class.selected]="isSelected(col, option)">
                           <label>
                             <input
                               type="checkbox"
                               [checked]="isSelected(col, option)"
                               (change)="toggleSelection(col, option)"
                             />
-                            {{ option || '(Empty)' }}
+                            {{ option }}
                           </label>
                         </li>
                       </ul>
                       <div class="filter-actions">
-                        <button *ngIf="hasActiveFilters" class="btn-cancel small" (click)="clearAllFilters()">Clear All</button>
+                        <button class="btn-clear" (click)="clearFilter(col)">Clear</button>
                       </div>
                     </div>
                   </div>
@@ -188,7 +189,7 @@
 
 
 <style>
-/* --- Card Layout --- */
+/* Card */
 .card {
   background: #fff;
   border-radius: 8px;
@@ -208,7 +209,7 @@
   font-weight: 400;
 }
 
-/* --- Buttons --- */
+/* Buttons */
 .btn-add, .btn-edit, .btn-delete, .btn-save, .btn-cancel {
   border: none;
   border-radius: 6px;
@@ -232,49 +233,15 @@
 .btn-cancel { background: #6c757d; color: #fff; }
 .btn-cancel:hover { background: #5a6268; }
 
-.btn-cancel.small {
-  font-size: 12px;
-  padding: 4px 8px;
-}
+/* Table */
+.table-container { overflow-x: auto; overflow-y: visible; }
+.table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; }
+.table th, .table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e0e0e0; }
+.table th { background: #f8f9fa; position: relative; overflow: visible; }
+.th-container { display: flex; align-items: center; justify-content: space-between; position: relative; }
 
-/* --- Table --- */
-.table-container {
-  overflow-x: auto;
-  overflow-y: visible;
-}
-
-.table {
-  width: 100%;
-  border-collapse: collapse;
-  font-family: Arial, sans-serif;
-}
-
-.table th, .table td {
-  padding: 12px 16px;
-  text-align: left;
-  border-bottom: 1px solid #e0e0e0;
-}
-
-.table th {
-  background: #f8f9fa;
-  position: relative;
-  overflow: visible;
-}
-
-/* --- Filters --- */
-.th-container {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  position: relative;
-}
-
-.filter-wrapper {
-  position: relative;
-  margin-left: 8px;
-  z-index: 100;
-}
-
+/* Filter Button */
+.filter-wrapper { position: relative; margin-left: 8px; z-index: 100; }
 .filter-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border: none;
@@ -290,34 +257,26 @@
   box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
   position: relative;
 }
-
 .filter-btn:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.5);
 }
-
 .filter-btn.active {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   box-shadow: 0 4px 12px rgba(245, 87, 108, 0.5);
 }
-
 .filter-btn.has-filter {
   background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
   box-shadow: 0 2px 8px rgba(245, 87, 108, 0.4);
 }
-
 .filter-btn.has-filter:hover {
   box-shadow: 0 4px 12px rgba(245, 87, 108, 0.6);
 }
-
-.arrow {
-  transition: transform 0.3s ease;
+.arrow { 
+  transition: transform 0.3s ease; 
   font-size: 10px;
 }
-
-.arrow.open {
-  transform: rotate(180deg);
-}
+.arrow.open { transform: rotate(180deg); }
 
 .filter-badge {
   position: absolute;
@@ -460,57 +419,62 @@
   box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
 }
 
-/* --- Modal --- */
+
+/* Optional: same colors as before */
+.btn-edit { background: #ffc107; color: #000; }
+.btn-edit:hover { background: #e0a800; }
+
+.btn-delete { background: #dc3545; color: #fff; }
+.btn-delete:hover { background: #c82333; }
+
+
+/* Modal */
 .modal {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  top:0; left:0; right:0; bottom:0;
   background: rgba(0,0,0,0.4);
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  display:flex;
+  justify-content:center;
+  align-items:center;
   z-index: 2000;
 }
-
 .modal-content {
-  background: #fff;
-  border-radius: 8px;
-  padding: 24px;
+  background:#fff;
+  padding:24px;
+  border-radius:8px;
   width: 400px;
   max-width: 90%;
-
   max-height: 90vh;
   overflow-y: scroll;
 }
+.modal-content h3 { margin-top:0; }
+.modal-content label { display:block; margin-top:12px; }
+.modal-content input { width:100%; padding:6px 10px; margin-top:4px; border-radius:4px; border:1px solid #ccc; }
+.form-buttons {margin-top:16px; display:flex; justify-content:flex-end; gap:8px; }
 
-.modal-content h3 {
-  margin-top: 0;
-}
-
-.modal-content form label {
-  display: block;
-  margin-top: 12px;
-}
-
-.modal-content form input,
-.modal-content form select {
-  width: 100%;
-  padding: 6px 10px;
-  margin-top: 4px;
+/* Action Buttons in Table */
+.table td button {
+  padding: 6px 12px;
   border-radius: 6px;
-  border: 1px solid #ccc;
+  font-size: 13px;
+  margin-right: 17px;
 }
 
-.form-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-  margin-top: 16px;
+.table td .btn-edit { 
+  background: #ffc107; 
+  color: #000; 
+  padding: 10px;
 }
+.table td .btn-edit:hover { background: #e0a800; }
 
-/* --- Status Messages --- */
+.table td .btn-delete { 
+  background: #dc3545; 
+  color: #fff; 
+  padding: 10px;
+}
+.table td .btn-delete:hover { background: #c82333; }
+
+/* Status Messages */
 .loading, .error {
   margin: 12px 0;
   padding: 10px;

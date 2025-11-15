@@ -150,6 +150,14 @@ export class DeliverableComponent implements OnInit {
     this.selectedFilters = {};
   }
 
+  clearFilter(column: keyof Deliverable, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.selectedFilters[column] = [];
+    this.activeFilter = null;
+  }
+
   get hasActiveFilters(): boolean {
     return Object.keys(this.selectedFilters).some(
       (k) => this.selectedFilters[k as keyof Deliverable]?.length

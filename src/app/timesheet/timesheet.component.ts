@@ -136,16 +136,20 @@ export class TimesheetComponent implements OnInit {
     this.selectedFilters = {};
   }
 
+  clearFilter(column: keyof Timesheet, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.selectedFilters[column] = [];
+    this.activeFilter = null;
+  }
+
   hasFilter(column: keyof Timesheet): boolean {
-    return !!(this.selectedFilters[column] && this.selectedFilters[column]!.length > 0);
+    return (this.selectedFilters[column]?.length ?? 0) > 0;
   }
 
   getFilterCount(column: keyof Timesheet): number {
-    return this.selectedFilters[column]?.length || 0;
-  }
-
-  get hasActiveFilters(): boolean {
-    return Object.values(this.selectedFilters).some((arr) => arr && arr.length > 0);
+    return this.selectedFilters[column]?.length ?? 0;
   }
 
   // --- CRUD Methods ---

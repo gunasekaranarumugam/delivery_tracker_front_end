@@ -135,6 +135,14 @@ export class ProjectComponent implements OnInit {
     this.selectedFilters = {};
   }
 
+  clearFilter(column: keyof Project, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.selectedFilters[column] = [];
+    this.activeFilter = null;
+  }
+
   hasFilter(column: keyof Project): boolean {
     return !!(this.selectedFilters[column] && this.selectedFilters[column]!.length > 0);
   }

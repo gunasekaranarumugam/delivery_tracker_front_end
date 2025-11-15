@@ -131,6 +131,14 @@ export class BusinessUnitComponent implements OnInit {
     this.selectedFilters = {};
   }
 
+  clearFilter(column: keyof BU, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.selectedFilters[column] = [];
+    this.activeFilter = null;
+  }
+
   hasFilter(column: keyof BU): boolean {
     return !!(this.selectedFilters[column] && this.selectedFilters[column]!.length > 0);
   }

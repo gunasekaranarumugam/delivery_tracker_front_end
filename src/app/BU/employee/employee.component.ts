@@ -159,6 +159,14 @@ export class EmployeeComponent implements OnInit {
     this.selectedFilters = {};
   }
 
+  clearColumnFilter(column: keyof Employee, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.selectedFilters[column] = [];
+    this.activeFilter = null;
+  }
+
   hasFilter(column: keyof Employee): boolean {
     return !!(this.selectedFilters[column] && this.selectedFilters[column]!.length > 0);
   }
