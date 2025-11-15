@@ -113,6 +113,14 @@ export class IssueComponent implements OnInit {
     this.selectedFilters = {};
   }
 
+  clearFilter(column: keyof Issue, event?: Event) {
+    if (event) {
+      event.stopPropagation();
+    }
+    this.selectedFilters[column] = [];
+    this.activeFilter = null;
+  }
+
   hasFilter(column: keyof Issue): boolean {
     return !!(this.selectedFilters[column] && this.selectedFilters[column]!.length > 0);
   }
