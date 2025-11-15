@@ -143,6 +143,7 @@ export class DeliverableComponent implements OnInit {
     } else {
       this.selectedFilters[column]!.push(value);
     }
+    this.activeFilter = null;
   }
 
   clearAllFilters() {
@@ -153,6 +154,14 @@ export class DeliverableComponent implements OnInit {
     return Object.keys(this.selectedFilters).some(
       (k) => this.selectedFilters[k as keyof Deliverable]?.length
     );
+  }
+
+  hasActiveFilter(column: keyof Deliverable): boolean {
+    return (this.selectedFilters[column]?.length ?? 0) > 0;
+  }
+
+  getFilterCount(column: keyof Deliverable): number {
+    return this.selectedFilters[column]?.length ?? 0;
   }
 
   // --- CRUD Methods ---

@@ -2,6 +2,7 @@ import { Component, OnInit, inject, Signal } from '@angular/core';
 import { DataService } from '../../data.service';
 import { BU, BusinessUnitCreate, BusinessUnitUpdate } from '../../model/bu';
 import { Employee } from 'src/app/model/Employee';
+import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
   selector: 'app-businessunit',
@@ -10,6 +11,7 @@ import { Employee } from 'src/app/model/Employee';
 })
 export class BusinessUnitComponent implements OnInit {
   private ds = inject(DataService);
+  private auth = inject(AuthService);
 
   // --- Signals from DataService ---
   buItems: Signal<BU[]> = this.ds.bu;
@@ -69,8 +71,21 @@ export class BusinessUnitComponent implements OnInit {
   selectedFilters: Partial<Record<keyof BU, string[]>> = {};
 
   ngOnInit(): void {
-    this.ds.fetchBU().subscribe();
+    this.ds.fetchBU().subscribe(() => {
+      this.applyDefaultFilters();
+    });
     this.ds.fetchEmployees().subscribe();
+  }
+
+  applyDefaultFilters(): void {
+    const user = this.auth.getAuthenticatedUser();
+    if (user && user.employee_full_name) {
+      // Apply default filter for BU Head column based on logged-in employee's full name
+      this.selectedFilters['business_unit_head_name'] = [user.employee_full_name];
+    }
+    
+    console.log('Applied default filters for BU:', this.selectedFilters);
+    console.log('User details:', user);
   }
 
   // --- Computed filtered list ---
@@ -109,10 +124,19 @@ export class BusinessUnitComponent implements OnInit {
     } else {
       this.selectedFilters[column]!.push(value);
     }
+    this.activeFilter = null;
   }
 
   clearAllFilters() {
     this.selectedFilters = {};
+  }
+
+  hasFilter(column: keyof BU): boolean {
+    return !!(this.selectedFilters[column] && this.selectedFilters[column]!.length > 0);
+  }
+
+  getFilterCount(column: keyof BU): number {
+    return this.selectedFilters[column]?.length || 0;
   }
 
   get hasActiveFilters(): boolean {

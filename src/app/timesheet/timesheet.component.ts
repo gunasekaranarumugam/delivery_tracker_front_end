@@ -129,10 +129,19 @@ export class TimesheetComponent implements OnInit {
     idx > -1
       ? this.selectedFilters[column]!.splice(idx, 1)
       : this.selectedFilters[column]!.push(value);
+    this.activeFilter = null;
   }
 
   clearAllFilters() {
     this.selectedFilters = {};
+  }
+
+  hasFilter(column: keyof Timesheet): boolean {
+    return !!(this.selectedFilters[column] && this.selectedFilters[column]!.length > 0);
+  }
+
+  getFilterCount(column: keyof Timesheet): number {
+    return this.selectedFilters[column]?.length || 0;
   }
 
   get hasActiveFilters(): boolean {
@@ -140,7 +149,7 @@ export class TimesheetComponent implements OnInit {
   }
 
   // --- CRUD Methods ---
-  
+
   // --- CREATE FORM ---
   openAddForm(): void {
     this.showAddForm = true;

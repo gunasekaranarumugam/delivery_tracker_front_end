@@ -106,10 +106,19 @@ export class IssueComponent implements OnInit {
     } else {
       this.selectedFilters[column]!.push(value);
     }
+    this.activeFilter = null;
   }
 
   clearAllFilters() {
     this.selectedFilters = {};
+  }
+
+  hasFilter(column: keyof Issue): boolean {
+    return !!(this.selectedFilters[column] && this.selectedFilters[column]!.length > 0);
+  }
+
+  getFilterCount(column: keyof Issue): number {
+    return this.selectedFilters[column]?.length || 0;
   }
 
   get hasActiveFilters(): boolean {

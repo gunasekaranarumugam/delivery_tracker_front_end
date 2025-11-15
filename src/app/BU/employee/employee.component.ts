@@ -159,6 +159,14 @@ export class EmployeeComponent implements OnInit {
     this.selectedFilters = {};
   }
 
+  hasFilter(column: keyof Employee): boolean {
+    return !!(this.selectedFilters[column] && this.selectedFilters[column]!.length > 0);
+  }
+
+  getFilterCount(column: keyof Employee): number {
+    return this.selectedFilters[column]?.length || 0;
+  }
+
   get hasActiveFilters(): boolean {
     return Object.keys(this.selectedFilters).some(
       k => this.selectedFilters[k as keyof Employee]?.length
