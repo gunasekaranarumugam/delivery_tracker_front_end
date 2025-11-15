@@ -16,8 +16,16 @@ export class LoginComponent {
   constructor(private authService: AuthService, private router: Router) {}
 
   onSubmit(): void {
+    // Validate email format
+    const emailPattern = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+
     if (!this.username || !this.password) {
-      this.errorMessage = 'Please enter both email and password.';
+      this.errorMessage = 'Please enter username and password.';
+      return;
+    }
+
+    if (!emailPattern.test(this.username)) {
+      this.errorMessage = 'Please provide a correct email address.';
       return;
     }
 
@@ -25,14 +33,12 @@ export class LoginComponent {
 
     this.authService.login(this.username, this.password).subscribe({
       next: (res) => {
-        // Optional welcome tip
-        this.tips.push(`Welcome, ${res.employee_full_name}!`);
         this.router.navigate(['/employee']);
       },
       error: (err) => {
         console.error('Login error:', err);
         if (err.status === 401) {
-          this.errorMessage = 'Invalid email or password.';
+          this.errorMessage = 'Incorrect email or password.';
         } else if (err.error?.detail) {
           this.errorMessage = Array.isArray(err.error.detail)
             ? err.error.detail.map((d: any) => d.msg).join(', ')

@@ -1,9 +1,9 @@
 <div class="page-header">
   <div class="overlay">
     <!-- Logo -->
-    <img 
-      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIxzkK_ppTJo_dqB2oxbfweZBluab0wDHINg&s" 
-      alt="Logo" 
+    <img
+      src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIxzkK_ppTJo_dqB2oxbfweZBluab0wDHINg&s"
+      alt="Logo"
       class="logo"
     >
 
@@ -13,7 +13,6 @@
     <!-- Right-side links -->
     <div class="header-right">
       <span *ngIf="isLoggedIn" class="welcome">Welcome, {{ userName }}</span>
-      <a *ngIf="!isLoggedIn" (click)="goToLogin()" class="link">Login</a>
       <a *ngIf="isLoggedIn" (click)="logout()" class="link">Logout</a>
     </div>
   </div>
