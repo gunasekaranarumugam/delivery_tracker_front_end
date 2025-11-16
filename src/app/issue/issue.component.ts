@@ -6,6 +6,7 @@ import { Employee } from '../model/Employee';
 import { Deliverable } from '../model/Deliverable';
 import { Project } from '../model/Project';
 import { BU } from '../model/bu';
+import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: 'app-issue',
@@ -14,6 +15,7 @@ import { BU } from '../model/bu';
 })
 export class IssueComponent implements OnInit {
   private ds = inject(DataService);
+  private auth = inject(AuthService);
 
   // --- Signals from DataService ---
   issues: Signal<Issue[]> = this.ds.issues;
@@ -63,12 +65,25 @@ export class IssueComponent implements OnInit {
   selectedFilters: Partial<Record<keyof Issue, string[]>> = {};
 
   ngOnInit(): void {
-    this.ds.fetchIssues().subscribe();
+    this.ds.fetchIssues().subscribe(() => {
+      this.applyDefaultFilters();
+    });
     this.ds.fetchTasks().subscribe();
     this.ds.fetchEmployees().subscribe();
     this.ds.fetchDeliverables().subscribe();
     this.ds.fetchProjects().subscribe();
     this.ds.fetchBU().subscribe();
+  }
+
+  applyDefaultFilters(): void {
+    const user = this.auth.getAuthenticatedUser();
+    if (user && user.employee_full_name) {
+      // Apply default filter for Action Owner column based on logged-in employee's full name
+      this.selectedFilters['action_owner_name'] = [user.employee_full_name];
+    }
+    
+    console.log('Applied default filters for Issue:', this.selectedFilters);
+    console.log('User details:', user);
   }
 
   // --- Computed filtered list ---
