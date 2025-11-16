@@ -8,12 +8,11 @@
       <div class="card-header">
         <h2>Deliverables</h2>
         <button class="btn-cancel" (click)="openCreateForm()">+ Add New</button>
-        
+
       </div>
 
       <!-- Loading/Error -->
       <div *ngIf="deliverableLoading()" class="loading">Loading Deliverables...</div>
-      <div *ngIf="deliverableError()" class="error">Error: Could not load data.</div>
 
       <!-- Deliverables Table -->
       <div class="table-container" *ngIf="!deliverableLoading()">
@@ -24,7 +23,7 @@
                 <div class="th-container">
                     <span>{{ columnLabels[col] || (col.replace('_', ' ') | titlecase) }}</span>
                   <div class="filter-wrapper">
-                    <button class="filter-btn" 
+                    <button class="filter-btn"
                             [class.active]="activeFilter === col"
                             [class.has-filter]="hasActiveFilter(col)"
                             (click)="toggleFilter(col)">
@@ -33,7 +32,7 @@
                     </button>
                     <div class="filter-dropdown" *ngIf="activeFilter === col">
                       <ul>
-                        <li *ngFor="let option of getUniqueOptions(col)" 
+                        <li *ngFor="let option of getUniqueOptions(col)"
                             [class.selected]="isSelected(col, option)">
                           <label>
                             <input type="checkbox"
@@ -62,7 +61,7 @@
               <td>{{ d.deliverable_name }}</td>
               <td [ngStyle]="{
                     color: d.priority === 'High' ? 'red' :
-                           d.priority === 'Medium' ? 'orange' : 
+                           d.priority === 'Medium' ? 'orange' :
                            d.priority === 'Low' ? 'green' : 'black'
                    }">{{ d.priority }}</td>
               <td>{{d.baseline_start_date}}</td>
@@ -88,7 +87,7 @@
       <div class="modal-content">
         <h3>Add Deliverable</h3>
         <form (ngSubmit)="saveNewDeliverable()">
-      
+
 
           <label>Project:</label>
           <select [(ngModel)]="newDeliverable.project_id" name="project_id" required>
@@ -97,7 +96,7 @@
             </option>
           </select>
 
-       
+
 
           <label>Deliverable ID:</label>
           <input type="text" [(ngModel)]="newDeliverable.deliverable_id" name="deliverable_id" required>
@@ -137,8 +136,8 @@
       <div class="modal-content">
         <h3>Edit Deliverable</h3>
         <form (ngSubmit)="saveEditDeliverable()">
-          
-          
+
+
           <label>Business Unit:</label>
           <select [(ngModel)]="editDeliverableModel.business_unit_id" name="business_unit_id" required disabled>
             <option *ngFor="let bu of businessUnits()" [value]="bu.business_unit_id">
@@ -299,8 +298,8 @@
 .filter-btn.has-filter:hover {
   box-shadow: 0 4px 12px rgba(245, 87, 108, 0.6);
 }
-.arrow { 
-  transition: transform 0.3s ease; 
+.arrow {
+  transition: transform 0.3s ease;
   font-size: 10px;
 }
 .arrow.open { transform: rotate(180deg); }
@@ -375,10 +374,10 @@
   background: #555;
 }
 
-.filter-dropdown ul { 
-  list-style: none; 
-  margin: 0; 
-  padding: 8px 0; 
+.filter-dropdown ul {
+  list-style: none;
+  margin: 0;
+  padding: 8px 0;
 }
 
 .filter-dropdown li {
@@ -402,38 +401,38 @@
   word-break: break-word;
 }
 
-.filter-dropdown li:hover { 
+.filter-dropdown li:hover {
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
 }
 
-.filter-dropdown li.selected { 
+.filter-dropdown li.selected {
   background: linear-gradient(135deg, #e0f7ff 0%, #d4edff 100%);
   border-left: 3px solid #007bff;
 }
 
-.filter-dropdown input[type="checkbox"] { 
-  margin-right: 10px; 
+.filter-dropdown input[type="checkbox"] {
+  margin-right: 10px;
   accent-color: #007bff;
   width: 18px;
   height: 18px;
   cursor: pointer;
 }
 
-.filter-actions { 
-  display: flex; 
+.filter-actions {
+  display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 12px 16px; 
+  padding: 12px 16px;
   border-top: 1px solid #e0e0e0;
   background: #f8f9fa;
   border-radius: 0 0 12px 12px;
 }
 
-.btn-clear { 
+.btn-clear {
   background: linear-gradient(135deg, #ff6b6b 0%, #ee5a6f 100%);
-  border: none; 
+  border: none;
   color: #fff;
-  cursor: pointer; 
+  cursor: pointer;
   font-size: 13px;
   padding: 6px 16px;
   border-radius: 6px;
@@ -441,7 +440,7 @@
   transition: all 0.2s ease;
 }
 
-.btn-clear:hover { 
+.btn-clear:hover {
   transform: translateY(-2px);
   box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
 }
