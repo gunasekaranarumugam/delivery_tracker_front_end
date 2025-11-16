@@ -5,6 +5,7 @@ import { Deliverable } from '../model/Deliverable';
 import { Employee } from '../model/Employee';
 import { Project } from '../model/Project';
 import { BU } from '../model/bu';
+import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: 'app-task',
@@ -13,6 +14,7 @@ import { BU } from '../model/bu';
 })
 export class TaskComponent implements OnInit {
   private ds = inject(DataService);
+  private auth = inject(AuthService);
 
   // --- Signals from DataService ---
   taskItems: Signal<Task[]> = this.ds.tasks;
@@ -127,11 +129,24 @@ export class TaskComponent implements OnInit {
   selectedFilters: Partial<Record<keyof Task, string[]>> = {};
 
   ngOnInit(): void {
-    this.ds.fetchTasks().subscribe();
+    this.ds.fetchTasks().subscribe(() => {
+      this.applyDefaultFilters();
+    });
     this.ds.fetchDeliverables().subscribe();
     this.ds.fetchEmployees().subscribe();
     this.ds.fetchBU().subscribe();
     this.ds.fetchProjects().subscribe();
+  }
+
+  applyDefaultFilters(): void {
+    const user = this.auth.getAuthenticatedUser();
+    if (user && user.employee_full_name) {
+      // Apply default filter for Assignee column based on logged-in employee's full name
+      this.selectedFilters['assignee_name'] = [user.employee_full_name];
+    }
+    
+    console.log('Applied default filters for Task:', this.selectedFilters);
+    console.log('User details:', user);
   }
 
   // --- Computed Filtered List ---

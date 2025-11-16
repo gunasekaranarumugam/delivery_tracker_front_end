@@ -3,6 +3,7 @@ import { DataService } from '../data.service';
 import { Project, ProjectCreate, ProjectUpdate } from '../model/Project';
 import { BU } from '../model/bu';
 import { Employee } from '../model/Employee';
+import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: 'app-project',
@@ -11,6 +12,7 @@ import { Employee } from '../model/Employee';
 })
 export class ProjectComponent implements OnInit {
   private ds = inject(DataService);
+  private auth = inject(AuthService);
 
   // --- Signals from DataService ---
   projects: Signal<Project[]> = this.ds.projects;
@@ -90,7 +92,20 @@ export class ProjectComponent implements OnInit {
   ngOnInit(): void {
     this.ds.fetchBU().subscribe();
     this.ds.fetchEmployees().subscribe();
-    this.ds.fetchProjects().subscribe();
+    this.ds.fetchProjects().subscribe(() => {
+      this.applyDefaultFilters();
+    });
+  }
+
+  applyDefaultFilters(): void {
+    const user = this.auth.getAuthenticatedUser();
+    if (user && user.employee_full_name) {
+      // Apply default filter for Delivery Manager column based on logged-in employee's full name
+      this.selectedFilters['delivery_manager_name'] = [user.employee_full_name];
+    }
+    
+    console.log('Applied default filters for Project:', this.selectedFilters);
+    console.log('User details:', user);
   }
 
   // --- Computed filtered list ---

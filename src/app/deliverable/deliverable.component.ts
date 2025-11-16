@@ -4,6 +4,7 @@ import { Deliverable, DeliverableCreate, DeliverableUpdate } from '../model/Deli
 import { Project } from '../model/Project';
 import { Employee } from '../model/Employee';
 import { BU } from '../model/bu';
+import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: 'app-deliverable',
@@ -12,6 +13,7 @@ import { BU } from '../model/bu';
 })
 export class DeliverableComponent implements OnInit {
   private ds = inject(DataService);
+  private auth = inject(AuthService);
 
   // --- Signals from DataService ---
   deliverableItems: Signal<Deliverable[]> = this.ds.deliverables;
@@ -101,10 +103,23 @@ export class DeliverableComponent implements OnInit {
   selectedFilters: Partial<Record<keyof Deliverable, string[]>> = {};
 
   ngOnInit(): void {
-    this.ds.fetchDeliverables().subscribe();
+    this.ds.fetchDeliverables().subscribe(() => {
+      this.applyDefaultFilters();
+    });
     this.ds.fetchProjects().subscribe();
     this.ds.fetchBU().subscribe();
     this.ds.fetchEmployees().subscribe();
+  }
+
+  applyDefaultFilters(): void {
+    const user = this.auth.getAuthenticatedUser();
+    if (user && user.employee_full_name) {
+      // Apply default filter for Delivery Manager column based on logged-in employee's full name
+      this.selectedFilters['delivery_manager_name'] = [user.employee_full_name];
+    }
+    
+    console.log('Applied default filters for Deliverable:', this.selectedFilters);
+    console.log('User details:', user);
   }
 
   // --- Computed filtered list ---

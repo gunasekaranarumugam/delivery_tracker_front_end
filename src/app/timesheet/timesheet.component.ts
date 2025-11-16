@@ -2,6 +2,7 @@ import { Component, OnInit, inject, Signal } from '@angular/core';
 import { DataService } from '../data.service';
 import { Timesheet, TimesheetCreate, TimesheetUpdate } from '../model/Timesheet';
 import { Task } from '../model/Task';
+import { AuthService } from '../auth/auth.service';
 
 @Component({
   selector: 'app-timesheet',
@@ -10,6 +11,7 @@ import { Task } from '../model/Task';
 })
 export class TimesheetComponent implements OnInit {
   private ds = inject(DataService);
+  private auth = inject(AuthService);
 
   // --- Signals from DataService ---
   timesheets: Signal<Timesheet[]> = this.ds.timesheets;
@@ -93,8 +95,21 @@ export class TimesheetComponent implements OnInit {
   selectedFilters: Partial<Record<keyof Timesheet, string[]>> = {};
 
   ngOnInit(): void {
-    this.ds.fetchTimesheets().subscribe();
+    this.ds.fetchTimesheets().subscribe(() => {
+      this.applyDefaultFilters();
+    });
     this.ds.fetchTasks().subscribe();
+  }
+
+  applyDefaultFilters(): void {
+    const user = this.auth.getAuthenticatedUser();
+    if (user && user.employee_full_name) {
+      // Apply default filter for Created By column based on logged-in employee's full name
+      this.selectedFilters['created_by_name'] = [user.employee_full_name];
+    }
+    
+    console.log('Applied default filters for Timesheet:', this.selectedFilters);
+    console.log('User details:', user);
   }
 
   // --- Filter Helpers ---
