@@ -93,7 +93,7 @@ export class ProjectComponent implements OnInit {
     this.ds.fetchBU().subscribe();
     this.ds.fetchEmployees().subscribe();
     this.ds.fetchProjects().subscribe(() => {
-      this.applyDefaultFilters();
+      // this.applyDefaultFilters();
     });
   }
 

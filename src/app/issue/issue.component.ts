@@ -66,7 +66,7 @@ export class IssueComponent implements OnInit {
 
   ngOnInit(): void {
     this.ds.fetchIssues().subscribe(() => {
-      this.applyDefaultFilters();
+      // this.applyDefaultFilters();
     });
     this.ds.fetchTasks().subscribe();
     this.ds.fetchEmployees().subscribe();

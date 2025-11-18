@@ -96,7 +96,7 @@ export class TimesheetComponent implements OnInit {
 
   ngOnInit(): void {
     this.ds.fetchTimesheets().subscribe(() => {
-      this.applyDefaultFilters();
+      // this.applyDefaultFilters();
     });
     this.ds.fetchTasks().subscribe();
   }

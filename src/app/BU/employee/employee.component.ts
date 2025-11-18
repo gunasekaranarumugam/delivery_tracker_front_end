@@ -99,7 +99,7 @@ export class EmployeeComponent implements OnInit {
   ngOnInit(): void {
     this.ds.fetchBU().subscribe();
     this.ds.fetchEmployees().subscribe(() => {
-      this.applyDefaultFilters();
+      // this.applyDefaultFilters();
     });
   }
 

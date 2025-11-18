@@ -104,7 +104,7 @@ export class DeliverableComponent implements OnInit {
 
   ngOnInit(): void {
     this.ds.fetchDeliverables().subscribe(() => {
-      this.applyDefaultFilters();
+      // this.applyDefaultFilters();
     });
     this.ds.fetchProjects().subscribe();
     this.ds.fetchBU().subscribe();
