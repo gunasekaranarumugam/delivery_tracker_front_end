@@ -72,7 +72,7 @@ export class BusinessUnitComponent implements OnInit {
 
   ngOnInit(): void {
     this.ds.fetchBU().subscribe(() => {
-      this.applyDefaultFilters();
+      // this.applyDefaultFilters();
     });
     this.ds.fetchEmployees().subscribe();
   }
