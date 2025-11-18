@@ -130,7 +130,7 @@ export class TaskComponent implements OnInit {
 
   ngOnInit(): void {
     this.ds.fetchTasks().subscribe(() => {
-      this.applyDefaultFilters();
+      // this.applyDefaultFilters();
     });
     this.ds.fetchDeliverables().subscribe();
     this.ds.fetchEmployees().subscribe();
