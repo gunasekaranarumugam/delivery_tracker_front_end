@@ -53,12 +53,8 @@
           </thead>
           <tbody>
             <tr *ngFor="let emp of filteredEmployees">
-              <td>{{ emp.business_unit_name }}</td>
-              <td>{{ emp.business_unit_head_name }}</td>
               <td>{{ emp.employee_full_name }}</td>
               <td>{{ emp.employee_email_address }}</td>
-              <td>{{ emp.created_at }}</td>
-              <td>{{ emp.created_by_name }}</td>
               <td>{{ emp.updated_at }}</td>
               <td>{{ emp.updated_by_name }}</td>
               <td class="form-buttons">

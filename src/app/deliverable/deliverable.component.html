@@ -55,21 +55,15 @@
           <tbody>
             <tr *ngFor="let d of filteredDeliverables">
               <td>{{ d.business_unit_name }}</td>
-              <td>{{ d.business_unit_head_name }}</td>
               <td>{{ d.project_name }}</td>
-              <td>{{ d.delivery_manager_name }}</td>
               <td>{{ d.deliverable_name }}</td>
               <td [ngStyle]="{
                     color: d.priority === 'High' ? 'red' :
                            d.priority === 'Medium' ? 'orange' :
                            d.priority === 'Low' ? 'green' : 'black'
                    }">{{ d.priority }}</td>
-              <td>{{d.baseline_start_date}}</td>
-              <td>{{d.baseline_end_date}}</td>
               <td>{{d.planned_start_date}}</td>
               <td>{{d.planned_end_date}}</td>
-              <td>{{d.created_at}}</td>
-              <td>{{d.created_by_name}}</td>
               <td>{{d.updated_at}}</td>
               <td>{{d.updated_by_name}}</td>
               <td class="form-buttons">

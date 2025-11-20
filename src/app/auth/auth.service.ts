@@ -17,7 +17,7 @@ export interface LoginResponse {
   providedIn: 'root'
 })
 export class AuthService {
-  private apiUrl = 'http://localhost:8000/api/Employees';
+  private apiUrl = 'http://delivery-tracker-developmentalb-762815170.ap-south-1.elb.amazonaws.com/api';
   private tokenKey = 'auth_token';
   public isLoggedIn$ = new BehaviorSubject<boolean>(this.hasToken());
 

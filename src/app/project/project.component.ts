@@ -56,31 +56,23 @@ export class ProjectComponent implements OnInit {
 
   // --- Columns for table & filters ---
   columns: (keyof Project)[] = [
-    'project_name',
     'business_unit_name',
+    'project_name',
     'delivery_manager_name',
     'project_description',
-    'baseline_start_date',
-    'baseline_end_date',
     'planned_start_date',
     'planned_end_date',
-    'created_by_name',
-    'created_at',
     'updated_at',
     'updated_by_name',
   ];
 
   columnLabels: Record<string, string> = {
-  project_name: 'Project',
   business_unit_name: 'BU',
+  project_name: 'Project',
   delivery_manager_name: 'DM',
   project_description: 'Description',
-  baseline_start_date: 'Baseline Start Date',
-  baseline_end_date: 'Baseline End Date',
   planned_start_date: 'Planned Start Date',
   planned_end_date: 'Planned End Date',
-  created_by_name: 'Created By',
-  created_at: 'Created At',
   updated_at: 'Updated At',
   updated_by_name: 'Updated By'
 };

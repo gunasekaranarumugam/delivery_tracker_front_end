@@ -40,7 +40,7 @@ export class IssueComponent implements OnInit {
   columns: (keyof Issue)[] = [
     'business_unit_name', 'project_name', 'deliverable_name', 'task_name',
     'issue_title', 'issue_description', 'action_owner_name', 'issue_priority',
-    'issue_status', 'created_at', 'created_by_name', 'updated_at', 'updated_by_name'
+    'issue_status', 'updated_at', 'updated_by_name'
   ];
 
 
@@ -54,8 +54,6 @@ export class IssueComponent implements OnInit {
   action_owner_name: 'Action Owner',
   issue_priority: 'Priority',
   issue_status: 'Status',
-  created_at: 'Created At',
-  created_by_name: 'Created By',
   updated_at: 'Updated At',
   updated_by_name: 'Updated By'
 };

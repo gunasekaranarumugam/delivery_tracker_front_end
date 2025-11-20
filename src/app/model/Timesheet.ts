@@ -17,12 +17,11 @@ export interface TimesheetCore {
     task_name: string
     updated_at:string;
     updated_by_name:string;
-    
     updated_by:string
     action_date: string
     progress: string
     hours_spent: string
-    remarks: string
+    remarks?: string
     created_at: string
     created_by: string
     created_by_name: string

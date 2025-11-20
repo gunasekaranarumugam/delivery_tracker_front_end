@@ -60,32 +60,24 @@ export class TimesheetComponent implements OnInit {
   // --- Table columns & filters ---
   columns: (keyof Timesheet)[] = [
     'business_unit_name',
-    'business_unit_head_name',
     'project_name',
-    'delivery_manager_name',
     'deliverable_name',
     'task_name',
     'action_date',
     'progress',
     'remarks',
-    'created_at',
-    'created_by_name',
     'updated_at',
     'updated_by_name',
   ];
 
    columnLabels: Record<string, string> = {
   business_unit_name: 'BU',
-  business_unit_head_name: 'BU Head',
   project_name: 'Project',
-  delivery_manager_name: 'DM',
   deliverable_name: 'Deliverable',
   task_name: 'Task',
   action_date: 'Action Date',
   progress: 'Progress',
   remarks: 'Remarks',
-  created_at: 'Created At',
-  created_by_name: 'Created By',
   updated_at: 'Updated At',
   updated_by_name: 'Updated By'
 };

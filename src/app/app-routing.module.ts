@@ -1,8 +1,8 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import {LoginComponent} from "./auth/login/login.component";
-import {BusinessUnitComponent} from "./BU/businessunit/businessunit.component";
-import {EmployeeComponent} from "./BU/employee/employee.component";
+import {BusinessUnitComponent} from "./businessunit/businessunit.component";
+import {EmployeeComponent} from "./employee/employee.component";
 import {ProjectComponent} from "./project/project.component";
 import {DeliverableComponent} from "./deliverable/deliverable.component";
 import {TaskComponent} from "./task/task.component";

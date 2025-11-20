@@ -60,16 +60,12 @@
           <tbody>
             <tr *ngFor="let ts of filteredTimesheets">
               <td>{{ ts.business_unit_name }}</td>
-              <td>{{ ts.business_unit_head_name }}</td>
               <td>{{ ts.project_name }}</td>
-              <td>{{ ts.delivery_manager_name }}</td>
               <td>{{ ts.deliverable_name }}</td>
               <td>{{ ts.task_name }}</td>
               <td>{{ ts.action_date }}</td>
               <td>{{ ts.progress }}%</td>
               <td>{{ ts.remarks }}</td>
-              <td>{{ ts.created_at }}</td>
-              <td>{{ ts.created_by_name }}</td>
               <td>{{ ts.updated_at || 'N/A' }}</td>
               <td>{{ ts.updated_by_name || 'N/A' }}</td>
               <td>

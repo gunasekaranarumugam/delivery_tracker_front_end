@@ -1,6 +1,6 @@
 import { Component, OnInit, inject, Signal } from '@angular/core';
-import { DataService } from '../../data.service';
-import { BU, BusinessUnitCreate, BusinessUnitUpdate } from '../../model/bu';
+import { DataService } from '../data.service';
+import { BU, BusinessUnitCreate, BusinessUnitUpdate } from '../model/bu';
 import { Employee } from 'src/app/model/Employee';
 import { AuthService } from 'src/app/auth/auth.service';
 
@@ -49,8 +49,6 @@ export class BusinessUnitComponent implements OnInit {
     'business_unit_name',
     'business_unit_head_name',
     'business_unit_description',
-    'created_by_name',
-    'created_at',
     'updated_at',
     'updated_by_name',
   ];
@@ -59,8 +57,6 @@ export class BusinessUnitComponent implements OnInit {
   business_unit_name: 'BU',
   business_unit_head_name: 'BU Head',
   business_unit_description: 'Description',
-  created_by_name: 'Created By',
-  created_at: 'Created At',
   updated_at: 'Updated At',
   updated_by_name: 'Updated By'
 };

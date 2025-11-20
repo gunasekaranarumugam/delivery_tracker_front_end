@@ -1,7 +1,7 @@
 import { Component, OnInit, inject, Signal } from '@angular/core';
-import { DataService } from "../../data.service";
+import { DataService } from "../data.service";
 import { AuthService } from 'src/app/auth/auth.service';
-import { Employee, EmployeeCreate, EmployeeUpdate } from "../../model/Employee";
+import { Employee, EmployeeCreate, EmployeeUpdate } from "../model/Employee";
 
 @Component({
   selector: 'app-employee',
@@ -71,23 +71,15 @@ export class EmployeeComponent implements OnInit {
 
   // --- Column headers & filters ---
   columns: (keyof Employee)[] = [
-    'business_unit_name',
-    'business_unit_head_name',
     'employee_full_name',
     'employee_email_address',
-    'created_at',
-    'created_by_name',
     'updated_at',
     'updated_by_name'
   ];
 
   columnLabels: Record<string, string> = {
-  business_unit_name: 'BU',
-  business_unit_head_name: 'BU Head',
   employee_full_name: 'Employee',
   employee_email_address: 'Employee Email',
-  created_at: 'Created At',
-  created_by_name: 'Created By',
   updated_at: 'Updated At',
   updated_by_name: 'Updated By'
 };

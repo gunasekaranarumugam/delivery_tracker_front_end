@@ -61,28 +61,22 @@
           <tbody>
             <tr *ngFor="let t of filteredTasks">
               <td>{{ t.business_unit_name }}</td>
-              <td>{{ t.business_unit_head_name }}</td>
               <td>{{ t.project_name }}</td>
-              <td>{{ t.delivery_manager_name }}</td>
               <td>{{ t.deliverable_name }}</td>
+              <td>{{ t.task_name }}</td>
               <td>{{ t.task_type_name }}</td>
               <td>{{ t.task_description }}</td>
               <td>{{ t.assignee_name }}</td>
               <td>{{ t.reviewer_name }}</td>
-
               <td [ngStyle]="{
                     color: t.priority === 'High' ? 'red' :
                            t.priority === 'Medium' ? 'orange' :
                            t.priority === 'Low' ? 'green' : 'black'
-                   }">{{ t.priority }}</td>
-
+                   }">{{ t.priority }}
+              </td>
               <td>{{ t.planned_start_date }}</td>
               <td>{{ t.planned_end_date }}</td>
-              <td>{{ t.baseline_start_date }}</td>
-              <td>{{ t.baseline_end_date }}</td>
               <td>{{ t.effort_estimated_in_hours }} hrs</td>
-              <td>{{ t.created_at }}</td>
-              <td>{{ t.created_by_name }}</td>
               <td>{{ t.updated_at }}</td>
               <td>{{ t.updated_by_name }}</td>
 

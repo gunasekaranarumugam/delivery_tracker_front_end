@@ -58,18 +58,13 @@
           </thead>
           <tbody>
             <tr *ngFor="let project of filteredProjects">
-              <td>{{ project.project_name }}</td>
               <td>{{ project.business_unit_name }}</td>
-               <td>{{ project.delivery_manager_name }}</td>
+              <td>{{ project.project_name }}</td>
+              <td>{{ project.delivery_manager_name }}</td>
               <td>{{ project.project_description }}</td>
-
-              <td>{{ project.baseline_start_date }}</td>
-              <td>{{ project.baseline_end_date }}</td>
               <td>{{ project.planned_start_date }}</td>
               <td>{{project.planned_end_date}}</td>
-              <td>{{ project.created_by_name }}</td>
-              <td>{{ project.created_at }}</td>
-                   <td>{{ project.updated_at }}</td>
+              <td>{{ project.updated_at }}</td>
               <td>{{ project.updated_by_name }}</td>
 
               <td>

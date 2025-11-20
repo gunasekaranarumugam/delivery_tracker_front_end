@@ -41,7 +41,7 @@ export interface Task {
 export interface TaskCreate {
   task_id:string;
   deliverable_id: string; // Used to be deliverableId
-  task_type_id?: string;  // Used to be taskType
+  task_type_id: string;  // Used to be taskType
   task_name: string;     // Used to be taskTitle
   task_description?: string; // Used to be taskDescription
   assignee_id?: string;   // Used to be assignee
