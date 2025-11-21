@@ -1,4 +1,3 @@
-// Full Project interface (for reading/listing)
 export interface Project {
   business_unit_id: string;
     business_unit_name: string;
@@ -22,7 +21,6 @@ export interface Project {
     entity_status:string;
 }
 
-// Interface for creating a new project
 export interface ProjectCreate {
   project_id: string;
   business_unit_id: string;
@@ -34,7 +32,6 @@ export interface ProjectCreate {
   baseline_end_date?:string;
   planned_start_date?:string;
   planned_end_date?:string;
-  
 }
 
 export interface ProjectUpdate {
@@ -49,10 +46,8 @@ export interface ProjectUpdate {
    baseline_end_date?:string;
    planned_start_date?:string;
    planned_end_date?:string;
-
 }
-// Interface for patch/update (partial updates)
+
 export interface ProjectPatch {
-  
-  entity_status?: string;
+   entity_status?: string;
 }

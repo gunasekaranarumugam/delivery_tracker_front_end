@@ -1,10 +1,10 @@
 import { Component, OnInit, inject, Signal } from '@angular/core';
 import { DataService } from '../data.service';
-import { Task, TaskCreate, TaskUpdate } from '../model/Task';
-import { Deliverable } from '../model/Deliverable';
-import { Employee } from '../model/Employee';
-import { Project } from '../model/Project';
-import { BU } from '../model/bu';
+import { Task, TaskCreate, TaskUpdate } from '../model/task';
+import { Deliverable } from '../model/deliverable';
+import { Employee } from '../model/employee';
+import { Project } from '../model/project';
+import { BusinessUnit } from '../model/business_unit';
 import { AuthService } from '../auth/auth.service';
 
 @Component({
@@ -16,16 +16,16 @@ export class TaskComponent implements OnInit {
   private ds = inject(DataService);
   private auth = inject(AuthService);
 
-  // --- Signals from DataService ---
+
   taskItems: Signal<Task[]> = this.ds.tasks;
   taskLoading: Signal<boolean> = this.ds.taskLoading;
   taskError: Signal<string | null> = this.ds.taskError;
   deliverables: Signal<Deliverable[]> = this.ds.deliverables;
   employees: Signal<Employee[]> = this.ds.employees;
   projects: Signal<Project[]> = this.ds.projects;
-  businessUnits: Signal<BU[]> = this.ds.bu;
+  businessUnits: Signal<BusinessUnit[]> = this.ds.bu;
 
-  // --- UI State ---
+ 
   showCreateForm = false;
   showEditForm = false;
   showDeletePopup = false;
@@ -33,9 +33,11 @@ export class TaskComponent implements OnInit {
   selectedTask: Task | null = null;
   editingTaskId: string | null = null;
 
-  // --- Form Models ---
+  private nextTaskId = 101;
+
+
   newTask: Partial<TaskCreate> = {
-    task_id: '',
+    task_id: this.getNextAvailableId(),
     deliverable_id: '',
     task_type_id: '',
     task_name: '',
@@ -78,7 +80,6 @@ export class TaskComponent implements OnInit {
     reviewer_id: ''
   };
 
-  // --- Columns for table ---
   columns: (keyof Task)[] = [
     'business_unit_name',
     'project_name',
@@ -114,14 +115,12 @@ export class TaskComponent implements OnInit {
 };
 
 
-  // --- Filter logic ---
+
   activeFilter: keyof Task | null = null;
   selectedFilters: Partial<Record<keyof Task, string[]>> = {};
 
   ngOnInit(): void {
-    this.ds.fetchTasks().subscribe(() => {
-      // this.applyDefaultFilters();
-    });
+    this.ds.fetchTasks().subscribe();
     this.ds.fetchDeliverables().subscribe();
     this.ds.fetchEmployees().subscribe();
     this.ds.fetchBU().subscribe();
@@ -131,7 +130,6 @@ export class TaskComponent implements OnInit {
   applyDefaultFilters(): void {
     const user = this.auth.getAuthenticatedUser();
     if (user && user.employee_full_name) {
-      // Apply default filter for Assignee column based on logged-in employee's full name
       this.selectedFilters['assignee_name'] = [user.employee_full_name];
     }
     
@@ -139,7 +137,7 @@ export class TaskComponent implements OnInit {
     console.log('User details:', user);
   }
 
-  // --- Computed Filtered List ---
+
   get filteredTasks(): Task[] {
     let list = this.taskItems();
     for (const key in this.selectedFilters) {
@@ -152,7 +150,15 @@ export class TaskComponent implements OnInit {
     return list;
   }
 
-  // --- Filter Helpers ---
+  getNextAvailableId(): string {
+     const alltasks = this.taskItems(); 
+     if (!alltasks) return '101'; 
+     const ids = alltasks
+      .map(e => Number(e.task_id))
+      .filter(n => !isNaN(n)); 
+    return (Math.max(...ids) + 1).toString();
+}
+  
   toggleFilter(column: keyof Task) {
     this.activeFilter = this.activeFilter === column ? null : column;
   }
@@ -194,12 +200,11 @@ export class TaskComponent implements OnInit {
     return this.selectedFilters[column]?.length ?? 0;
   }
 
-  // --- CREATE FORM ---
   openCreateForm(): void {
     this.showCreateForm = true;
     this.showEditForm = false;
     this.newTask = {
-      task_id: '',
+      task_id: this.getNextAvailableId(),
       deliverable_id: '',
       task_type_id: '',
       task_name: '',
@@ -216,13 +221,14 @@ export class TaskComponent implements OnInit {
   }
 
   saveNewTask(): void {
+    this.newTask.baseline_start_date = this.newTask.planned_start_date;
+    this.newTask.baseline_end_date = this.newTask.planned_end_date;
     this.ds.createTask(this.newTask).subscribe({
       next: () => this.cancelForms(),
       error: (err) => console.error('Creation failed:', err)
     });
   }
 
-  // --- EDIT FORM ---
   openEditForm(task: Task): void {
     this.showEditForm = true;
     this.showCreateForm = false;
@@ -260,12 +266,11 @@ export class TaskComponent implements OnInit {
     if (!this.editingTaskId) return;
 
     this.ds.updateTask(this.editingTaskId, this.editTaskModel).subscribe({
-      next: () => this.cancelForms(),
+      next: () => {this.cancelForms()},
       error: (err) => console.error('Update failed:', err)
     });
   }
 
-  // --- DELETE ---
   openDeletePopup(task: Task): void {
     this.selectedTask = task;
     this.showDeletePopup = true;
@@ -280,7 +285,6 @@ export class TaskComponent implements OnInit {
     }
   }
 
-  // --- CANCEL ---
   cancelForms(): void {
     this.showCreateForm = false;
     this.showEditForm = false;

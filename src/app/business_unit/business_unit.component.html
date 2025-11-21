@@ -1,19 +1,13 @@
 <app-page-header></app-page-header>
 <div class="layout">
   <app-sidebar></app-sidebar>
-
   <div class="content">
     <div class="card">
-      <!-- Card Header -->
       <div class="card-header">
         <h2>Business Units</h2>
         <button class="btn-cancel" (click)="openCreateForm()">+ Add New</button>
       </div>
-
-      <!-- Loading/Error -->
       <div *ngIf="buLoading()" class="loading">Loading Business Units...</div>
-
-      <!-- Business Unit Table -->
       <div class="table-container" *ngIf="!buLoading()">
         <table class="table">
           <thead>
@@ -58,7 +52,7 @@
               <td>{{ bu.business_unit_description }}</td>
               <td>{{ bu.updated_at }}</td>
               <td>{{ bu.updated_by_name }}</td>
-              <td class="form-buttons">
+              <td>
                 <button class="btn-edit" (click)="openEditForm(bu)">Edit</button>
                 <button class="btn-delete" (click)="openDeletePopup(bu)">Archive</button>
               </td>
@@ -67,17 +61,10 @@
         </table>
       </div>
     </div>
-
-    <!-- CREATE FORM Modal -->
     <div class="modal" *ngIf="showCreateForm">
       <div class="modal-content">
         <h3>Add Business Unit</h3>
         <form (ngSubmit)="saveNewBU()">
-
-           <label>Business Unit ID:</label>
-          <input type="text" [(ngModel)]="newBU.business_unit_id" name="create_id" required>
-
-
 
           <label>Business Unit Name:</label>
           <input type="text" [(ngModel)]="newBU.business_unit_name" name="create_name" required>
@@ -85,8 +72,7 @@
           <label>Business Unit Description:</label>
           <input type="text" [(ngModel)]="newBU.business_unit_description" name="create_desc" required>
 
-
-           <label>Business Unit Head:</label>
+          <label>Business Unit Head:</label>
           <select [(ngModel)]="newBU.business_unit_head_id" name="create_head" required>
             <option value="newBU.business_unit_head_id"></option>
             <option *ngFor="let emp of employees()" [value]="emp.employee_id">
@@ -101,8 +87,6 @@
         </form>
       </div>
     </div>
-
-    <!-- EDIT FORM Modal -->
     <div class="modal" *ngIf="showEditForm">
       <div class="modal-content">
         <h3>Edit Business Unit</h3>
@@ -116,7 +100,7 @@
           <label>Business Unit Description:</label>
           <input type="text" [(ngModel)]="editBUModel.business_unit_description" name="edit_desc" required>
 
-         <label>Business Unit Head Name:</label>
+          <label>Business Unit Head Name:</label>
           <select [(ngModel)]="editBUModel.business_unit_head_id" name="edit_head" required>
             <option value="editBUModel.business_unit_head_name"></option>
             <option *ngFor="let emp of employees()" [value]="emp.employee_id">
@@ -131,8 +115,6 @@
         </form>
       </div>
     </div>
-
-    <!-- DELETE CONFIRMATION Modal -->
     <div class="modal" *ngIf="showDeletePopup">
       <div class="modal-content">
         <h3>Archive Business Unit</h3>
@@ -146,9 +128,7 @@
   </div>
 </div>
 
-
 <style>
-/* Card */
 .card {
   background: #fff;
   border-radius: 8px;
@@ -168,7 +148,6 @@
   font-weight: 400;
 }
 
-/* Buttons */
 .btn-add, .btn-edit, .btn-delete, .btn-save, .btn-cancel {
   border: none;
   border-radius: 6px;
@@ -192,7 +171,6 @@
 .btn-cancel { background: #6c757d; color: #fff; }
 .btn-cancel:hover { background: #5a6268; }
 
-/* Table */
 .table-container { overflow-x: auto; overflow-y: visible; min-height: 200px; }
 .table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; min-height: 150px; }
 .table th, .table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e0e0e0; min-width: 150px; }
@@ -201,7 +179,6 @@
 .table tbody { min-height: 100px; }
 .th-container { display: flex; align-items: center; justify-content: space-between; position: relative; min-width: 150px; }
 
-/* Filter Button */
 .filter-wrapper { position: relative; margin-left: 8px; z-index: 1000; }
 .filter-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -267,7 +244,6 @@
   }
 }
 
-/* Dropdown */
 .filter-dropdown {
   position: absolute;
   top: 100%;
@@ -383,16 +359,12 @@
   box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
 }
 
-
-/* Optional: same colors as before */
 .btn-edit { background: #ffc107; color: #000; }
 .btn-edit:hover { background: #e0a800; }
 
 .btn-delete { background: #dc3545; color: #fff; }
 .btn-delete:hover { background: #c82333; }
 
-
-/* Modal */
 .modal {
   position: fixed;
   top:0; left:0; right:0; bottom:0;
@@ -414,7 +386,6 @@
 .modal-content input { width:100%; padding:6px 10px; margin-top:4px; border-radius:4px; border:1px solid #ccc; }
 .form-buttons {margin-top:16px; display:flex; justify-content:flex-end; gap:8px; }
 
-/* Action Buttons in Table */
 .table td button {
   padding: 6px 12px;
   border-radius: 6px;
@@ -435,11 +406,6 @@
   background: #dc3545;
   color: #fff;
   padding: 10px;
-
 }
 .table td .btn-delete:hover { background: #c82333; }
-
-
-
-
 </style>

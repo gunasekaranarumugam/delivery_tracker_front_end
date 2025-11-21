@@ -1,8 +1,8 @@
 import { Component, OnInit, inject, Signal } from '@angular/core';
 import { DataService } from '../data.service';
-import { Project, ProjectCreate, ProjectUpdate } from '../model/Project';
-import { BU } from '../model/bu';
-import { Employee } from '../model/Employee';
+import { Project, ProjectCreate, ProjectUpdate } from '../model/project';
+import { BusinessUnit } from '../model/business_unit';
+import { Employee } from '../model/employee';
 import { AuthService } from '../auth/auth.service';
 
 @Component({
@@ -14,24 +14,23 @@ export class ProjectComponent implements OnInit {
   private ds = inject(DataService);
   private auth = inject(AuthService);
 
-  // --- Signals from DataService ---
   projects: Signal<Project[]> = this.ds.projects;
   loading: Signal<boolean> = this.ds.projectLoading;
   error: Signal<string | null> = this.ds.projectError;
 
-  businessUnits: Signal<BU[]> = this.ds.bu;
+  businessUnits: Signal<BusinessUnit[]> = this.ds.bu;
   employees: Signal<Employee[]> = this.ds.employees;
 
-  // --- Component State ---
   showCreateForm = false;
   showEditForm = false;
   showDeletePopup = false;
 
   selectedProject: Project | null = null;
 
-  // --- Form Models ---
+  private nextProjectId = 101;
+
   newProject: ProjectCreate = {
-    project_id: '',
+    project_id: this.getNextAvailableId(),
     project_name: '',
     project_description: '',
     business_unit_id: '',
@@ -54,7 +53,6 @@ export class ProjectComponent implements OnInit {
 
   editingProjectId: string | null = null;
 
-  // --- Columns for table & filters ---
   columns: (keyof Project)[] = [
     'business_unit_name',
     'project_name',
@@ -77,30 +75,22 @@ export class ProjectComponent implements OnInit {
   updated_by_name: 'Updated By'
 };
 
-  // --- Filter logic ---
   activeFilter: keyof Project | null = null;
   selectedFilters: Partial<Record<keyof Project, string[]>> = {};
 
   ngOnInit(): void {
     this.ds.fetchBU().subscribe();
     this.ds.fetchEmployees().subscribe();
-    this.ds.fetchProjects().subscribe(() => {
-      // this.applyDefaultFilters();
-    });
+    this.ds.fetchProjects().subscribe();
   }
 
   applyDefaultFilters(): void {
     const user = this.auth.getAuthenticatedUser();
     if (user && user.employee_full_name) {
-      // Apply default filter for Delivery Manager column based on logged-in employee's full name
       this.selectedFilters['delivery_manager_name'] = [user.employee_full_name];
     }
-    
-    console.log('Applied default filters for Project:', this.selectedFilters);
-    console.log('User details:', user);
   }
 
-  // --- Computed filtered list ---
   get filteredProjects(): Project[] {
     let list = this.projects();
     for (const key in this.selectedFilters) {
@@ -113,7 +103,6 @@ export class ProjectComponent implements OnInit {
     return list;
   }
 
-  // --- Filter Helpers ---
   toggleFilter(column: keyof Project) {
     this.activeFilter = this.activeFilter === column ? null : column;
   }
@@ -150,6 +139,15 @@ export class ProjectComponent implements OnInit {
     this.activeFilter = null;
   }
 
+  getNextAvailableId(): string {
+    const allprojects = this.projects(); 
+     if (!allprojects) return '101'; 
+     const ids = allprojects
+      .map(e => Number(e.project_id))
+      .filter(n => !isNaN(n));
+    return (Math.max(...ids) + 1).toString();
+  }
+
   hasFilter(column: keyof Project): boolean {
     return !!(this.selectedFilters[column] && this.selectedFilters[column]!.length > 0);
   }
@@ -164,14 +162,11 @@ export class ProjectComponent implements OnInit {
     );
   }
 
-  // --- CRUD Methods ---
-
-  // --- CREATE FORM ---
   openCreateForm(): void {
     this.showCreateForm = true;
     this.showEditForm = false;
     this.newProject = {
-      project_id: '',
+      project_id: this.getNextAvailableId(),
       project_name: '',
       project_description: '',
       business_unit_id: '',
@@ -182,6 +177,10 @@ export class ProjectComponent implements OnInit {
   }
 
   saveNewProject(): void {
+    this.newProject.baseline_start_date = this.newProject.planned_start_date;
+    this.newProject.baseline_end_date = this.newProject.planned_end_date;
+    this.nextProjectId++;
+    this.newProject.project_id = this.nextProjectId.toString();
     const payload: Project = {
       ...this.newProject,
       business_unit_name: this.getBUName(this.newProject.business_unit_id),
@@ -189,14 +188,12 @@ export class ProjectComponent implements OnInit {
       entity_status: 'Active',
       project_id: this.newProject.project_id || Math.random().toString(36).substr(2, 9)
     } as Project;
-
     this.ds.createProject(payload).subscribe({
       next: () => this.cancelForms(),
       error: err => console.error('Creation failed:', err)
     });
   }
 
-  // --- EDIT FORM ---
   openEditForm(proj: Project): void {
     this.showEditForm = true;
     this.showCreateForm = false;
@@ -219,7 +216,6 @@ export class ProjectComponent implements OnInit {
     });
   }
 
-  // --- DELETE ---
   openDeletePopup(proj: Project): void {
     this.selectedProject = proj;
     this.showDeletePopup = true;
@@ -234,7 +230,6 @@ export class ProjectComponent implements OnInit {
     }
   }
 
-  // --- Cancel ---
   cancelForms(): void {
     this.showCreateForm = false;
     this.showEditForm = false;
@@ -243,7 +238,6 @@ export class ProjectComponent implements OnInit {
     this.editingProjectId = null;
   }
 
-  // --- Helpers ---
   getBUName(id?: string): string {
     return this.businessUnits().find(b => b.business_unit_id === id)?.business_unit_name || '';
   }

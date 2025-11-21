@@ -1,10 +1,10 @@
 export interface IssueUpdate {
   business_unit_id?: string;
   business_unit_name?: string;
-  project_id: string;
-  project_name: string;
-  deliverable_id: string;
-  deliverable_name: string;
+  project_id?: string;
+  project_name?: string;
+  deliverable_id?: string;
+  deliverable_name?: string;
   task_id: string;
   task_name: string;
   issue_id: string;
@@ -16,7 +16,6 @@ export interface IssueUpdate {
   issue_status: string;
 }
 
-
 export interface IssueCreate {
   issue_id: string;
   task_id: string;
@@ -25,13 +24,9 @@ export interface IssueCreate {
   action_owner_id: string;
   issue_priority: string;
   issue_status: string;
-  entity_status: string; // typically "Active"
+  entity_status: string; 
 }
 
-
-// ------------------------------
-// MAIN ISSUE INTERFACE
-// ------------------------------
 export interface Issue {
   business_unit_id: string;
   business_unit_name: string;
@@ -55,7 +50,6 @@ export interface Issue {
   updated_by_name: string;
 }
 
-
 export interface IssueCore {
   business_unit_id: string;
   business_unit_name: string;
@@ -78,8 +72,6 @@ export interface IssueCore {
   updated_at: string;
   updated_by_name: string;
 }
-
-
 
 export interface IssuePatch {
     entity_status?:string;

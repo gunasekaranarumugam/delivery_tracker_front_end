@@ -1,19 +1,13 @@
 <app-page-header></app-page-header>
 <div class="layout">
   <app-sidebar></app-sidebar>
-
   <div class="content">
     <div class="card">
       <div class="card-header">
         <h2>Employees</h2>
         <button class="btn-cancel" (click)="openCreateForm()">+ Add New</button>
-
       </div>
-
-      <!-- Loading/Error -->
       <div *ngIf="loading()" class="loading">Loading Employees...</div>
-
-      <!-- Employee Table -->
       <div class="table-container" *ngIf="!loading()">
         <table class="table">
           <thead>
@@ -57,7 +51,7 @@
               <td>{{ emp.employee_email_address }}</td>
               <td>{{ emp.updated_at }}</td>
               <td>{{ emp.updated_by_name }}</td>
-              <td class="form-buttons">
+              <td>
                 <button class="btn-edit" (click)="openEditForm(emp)">Edit</button>
                 <button class="btn-delete" (click)="openDeletePopup(emp)">Archive</button>
               </td>
@@ -66,15 +60,11 @@
         </table>
       </div>
     </div>
-
-    <!-- ADD EMPLOYEE FORM -->
     <div class="modal" *ngIf="showCreateForm">
       <div class="modal-content">
         <h3>Add New Employee</h3>
         <form (ngSubmit)="saveNewEmployee()">
-          <label>Employee ID:</label>
-          <input type="text" [(ngModel)]="newEmployee.employee_id" name="add_employee_id" required>
-
+  
           <label>Full Name:</label>
           <input type="text" [(ngModel)]="newEmployee.employee_full_name" name="add_employee_full_name" required>
 
@@ -84,15 +74,6 @@
           <label>Password:</label>
           <input type="password" [(ngModel)]="newEmployee.password" name="add_password" required>
 
-
-          <label>Business Unit ID with Name:</label>
-          <select [(ngModel)]="newEmployee.business_unit_id" name="create_bu_id" required>
-            <option value="newBU.business_unit_id"></option>
-            <option *ngFor="let bu of businessUnits()" [value]="bu.business_unit_id">
-              {{ bu.business_unit_id }}  - {{bu.business_unit_name}}
-            </option>
-          </select>
-
           <div class="form-buttons">
             <button type="submit" class="btn-save">Save</button>
             <button type="button" class="btn-cancel" (click)="cancelForms()">Cancel</button>
@@ -101,7 +82,6 @@
       </div>
     </div>
 
-    <!-- EDIT EMPLOYEE FORM -->
     <div class="modal" *ngIf="showEditForm">
       <div class="modal-content">
         <h3>Edit Employee</h3>
@@ -115,18 +95,7 @@
           <label>Email Address:</label>
           <input type="email" [(ngModel)]="editEmployeeModel.employee_email_address" name="edit_employee_email_address" required>
 
-          <label>Business Unit ID:</label>
-          <input type="text" [(ngModel)]="editEmployeeModel.business_unit_id" name="edit_business_unit_id" required disabled>
-
-          <label>Business Unit Name:</label>
-          <input type="text" [(ngModel)]="editEmployeeModel.business_unit_name" name="edit_business_unit_name" required>
-
-          <label>Business Unit Head ID:</label>
-          <input type="text" [(ngModel)]="editEmployeeModel.business_unit_head_id" name="edit_business_unit_head_id" disabled>
-
-          <label>Business Unit Head Name:</label>
-          <input type="text" [(ngModel)]="editEmployeeModel.business_unit_head_name" name="edit_business_unit_head_name" disabled>
-
+         
           <div class="form-buttons">
             <button type="submit" class="btn-save">Update</button>
             <button type="button" class="btn-cancel" (click)="cancelForms()">Cancel</button>
@@ -135,7 +104,6 @@
       </div>
     </div>
 
-    <!-- DELETE CONFIRMATION MODAL -->
     <div class="modal" *ngIf="showDeletePopup">
       <div class="modal-content">
         <h3>Archive Employee</h3>
@@ -149,9 +117,7 @@
   </div>
 </div>
 
-
 <style>
-/* Card */
 .card {
   background: #fff;
   border-radius: 8px;
@@ -171,7 +137,6 @@
   font-weight: 400;
 }
 
-/* Buttons */
 .btn-add, .btn-edit, .btn-delete, .btn-save, .btn-cancel {
   border: none;
   border-radius: 6px;
@@ -195,7 +160,7 @@
 .btn-cancel { background: #6c757d; color: #fff; }
 .btn-cancel:hover { background: #5a6268; }
 
-/* Table */
+
 .table-container { overflow-x: auto; overflow-y: visible; min-height: 200px; }
 .table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; min-height: 150px; }
 .table th, .table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e0e0e0; min-width: 150px; }
@@ -204,7 +169,6 @@
 .table tbody { min-height: 100px; }
 .th-container { display: flex; align-items: center; justify-content: space-between; position: relative; min-width: 150px; }
 
-/* Filter Button */
 .filter-wrapper { position: relative; margin-left: 8px; z-index: 1000; }
 .filter-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -270,7 +234,6 @@
   }
 }
 
-/* Dropdown */
 .filter-dropdown {
   position: absolute;
   top: 100%;
@@ -386,7 +349,6 @@
   box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
 }
 
-/* Modal */
 .modal {
   position: fixed;
   top:0; left:0; right:0; bottom:0;

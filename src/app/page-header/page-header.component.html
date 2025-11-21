@@ -1,16 +1,11 @@
 <div class="page-header">
   <div class="overlay">
-    <!-- Logo -->
     <img
       src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcSIxzkK_ppTJo_dqB2oxbfweZBluab0wDHINg&s"
       alt="Logo"
       class="logo"
     >
-
-    <!-- Page Title -->
     <h1 class="page-title">{{ title }}</h1>
-
-    <!-- Right-side links -->
     <div class="header-right">
       <span *ngIf="isLoggedIn" class="welcome">Welcome, {{ userName }}</span>
       <a *ngIf="isLoggedIn" (click)="logout()" class="link">Logout</a>

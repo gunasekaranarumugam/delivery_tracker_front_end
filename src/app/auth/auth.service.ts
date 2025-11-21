@@ -3,7 +3,6 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { BehaviorSubject, Observable, throwError } from 'rxjs';
 import { catchError, tap } from 'rxjs/operators';
 
-
 export interface LoginResponse {
   employee_id: string;
   employee_full_name: string;
@@ -24,19 +23,13 @@ export class AuthService {
   constructor(private http: HttpClient) {}
   login(email: string, password: string): Observable<LoginResponse> {
   const body = new URLSearchParams();
-  body.set('username', email);  // ⚠ FastAPI OAuth2 expects "username"
+  body.set('username', email);  
   body.set('password', password);
 
   return this.http.post<LoginResponse>(`${this.apiUrl}/login`, body.toString(), {
     headers: new HttpHeaders({ 'Content-Type': 'application/x-www-form-urlencoded' })
   }).pipe(
     tap(res => {
-      // Log the full response and token for debugging
-
-      console.log('Login response:', res);
-      console.log('Token received:', res.access_token);
-
-      // Store token and update login status
       if (res.access_token) {
         localStorage.setItem(this.tokenKey, res.access_token);
         localStorage.setItem('employee_name', res.employee_full_name);
@@ -57,9 +50,6 @@ export class AuthService {
     })
   );
 }
-
-
-
   logout(): void {
     const token = this.getToken();
     if (token) {

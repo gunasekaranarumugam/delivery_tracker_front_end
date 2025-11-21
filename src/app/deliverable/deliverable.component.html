@@ -1,20 +1,13 @@
 <app-page-header></app-page-header>
 <div class="layout">
   <app-sidebar></app-sidebar>
-
   <div class="content">
     <div class="card">
-      <!-- Card Header -->
       <div class="card-header">
         <h2>Deliverables</h2>
         <button class="btn-cancel" (click)="openCreateForm()">+ Add New</button>
-
       </div>
-
-      <!-- Loading/Error -->
       <div *ngIf="deliverableLoading()" class="loading">Loading Deliverables...</div>
-
-      <!-- Deliverables Table -->
       <div class="table-container" *ngIf="!deliverableLoading()">
         <table class="table">
           <thead>
@@ -66,7 +59,7 @@
               <td>{{d.planned_end_date}}</td>
               <td>{{d.updated_at}}</td>
               <td>{{d.updated_by_name}}</td>
-              <td class="form-buttons">
+              <td>
                 <button class="btn-edit" (click)="openEditForm(d)">Edit</button>
                 <button class="btn-delete" (click)="openDeletePopup(d)">Archive</button>
               </td>
@@ -75,13 +68,18 @@
         </table>
       </div>
     </div>
-
-    <!-- CREATE FORM Modal -->
     <div class="modal" *ngIf="showCreateForm">
       <div class="modal-content">
         <h3>Add Deliverable</h3>
         <form (ngSubmit)="saveNewDeliverable()">
 
+          <label>Business Unit:</label>
+          <select [(ngModel)]="newDeliverable.business_unit_id" name="business_unit_id" required>
+            <option value="">Select BU</option>
+            <option *ngFor="let bu of businessUnits()" [value]="bu.business_unit_id">
+              {{ bu.business_unit_name }}
+            </option>
+          </select>
 
           <label>Project:</label>
           <select [(ngModel)]="newDeliverable.project_id" name="project_id" required>
@@ -89,11 +87,6 @@
               {{ proj.project_name }}
             </option>
           </select>
-
-
-
-          <label>Deliverable ID:</label>
-          <input type="text" [(ngModel)]="newDeliverable.deliverable_id" name="deliverable_id" required>
 
           <label>Deliverable Name:</label>
           <input type="text" [(ngModel)]="newDeliverable.deliverable_name" name="deliverable_name" required>
@@ -104,12 +97,6 @@
             <option value="Medium">Medium</option>
             <option value="Low">Low</option>
           </select>
-
-            <label>Baseline Start Date:</label>
-          <input type="date" [(ngModel)]="newDeliverable.baseline_start_date" name="baseline_start_date">
-
-          <label>Baseline End Date:</label>
-          <input type="date" [(ngModel)]="newDeliverable.baseline_end_date" name="baseline_end_date">
 
           <label>Planned Start Date:</label>
           <input type="date" [(ngModel)]="newDeliverable.planned_start_date" name="planned_start_date">
@@ -124,45 +111,29 @@
         </form>
       </div>
     </div>
-
-    <!-- EDIT FORM Modal -->
     <div class="modal" *ngIf="showEditForm">
       <div class="modal-content">
         <h3>Edit Deliverable</h3>
         <form (ngSubmit)="saveEditDeliverable()">
+          <label>Deliverable ID:</label>
+          <input type="text" [(ngModel)]="editDeliverableModel.deliverable_id" name="deliverable_id" required disabled>
 
 
           <label>Business Unit:</label>
           <select [(ngModel)]="editDeliverableModel.business_unit_id" name="business_unit_id" required disabled>
+            <option value="" disabled>Select BU</option>
             <option *ngFor="let bu of businessUnits()" [value]="bu.business_unit_id">
               {{ bu.business_unit_name }}
             </option>
           </select>
 
-          <label>Business Unit Head:</label>
-          <select [(ngModel)]="editDeliverableModel.business_unit_head_id" name="business_unit_head_id" required disabled>
-            <option *ngFor="let emp of employees()" [value]="emp.employee_id">
-              {{ emp.employee_full_name }}
-            </option>
-          </select>
-
           <label>Project:</label>
-          <select [(ngModel)]="editDeliverableModel.project_id" name="project_id" required>
+          <select [(ngModel)]="editDeliverableModel.project_id" name="project_id" required disabled>
             <option *ngFor="let proj of projects()" [value]="proj.project_id">
               {{ proj.project_name }}
             </option>
           </select>
-
-          <label>Delivery Manager:</label>
-          <select [(ngModel)]="editDeliverableModel.delivery_manager_id" name="delivery_manager_id" required disabled>
-            <option *ngFor="let emp of employees()" [value]="emp.employee_id">
-              {{ emp.employee_full_name }}
-            </option>
-          </select>
-
-          <label>Deliverable ID:</label>
-          <input type="text" [(ngModel)]="editDeliverableModel.deliverable_id" name="deliverable_id" required disabled>
-
+       
           <label>Deliverable Name:</label>
           <input type="text" [(ngModel)]="editDeliverableModel.deliverable_name" name="deliverable_name" required>
 
@@ -172,12 +143,6 @@
             <option value="Medium">Medium</option>
             <option value="Low">Low</option>
           </select>
-
-            <label>Baseline Start Date:</label>
-          <input type="date" [(ngModel)]="editDeliverableModel.baseline_start_date" name="baseline_start_date">
-
-          <label>Baseline End Date:</label>
-          <input type="date" [(ngModel)]="editDeliverableModel.baseline_end_date" name="baseline_end_date">
 
           <label>Planned Start Date:</label>
           <input type="date" [(ngModel)]="editDeliverableModel.planned_start_date" name="planned_start_date">
@@ -193,7 +158,6 @@
       </div>
     </div>
 
-    <!-- DELETE CONFIRMATION Modal -->
     <div class="modal" *ngIf="showDeletePopup">
       <div class="modal-content">
         <h3>Archive Deliverable</h3>
@@ -207,9 +171,8 @@
   </div>
 </div>
 
-
 <style>
-/* Card */
+
 .card {
   background: #fff;
   border-radius: 8px;
@@ -229,7 +192,7 @@
   font-weight: 400;
 }
 
-/* Buttons */
+
 .btn-add, .btn-edit, .btn-delete, .btn-save, .btn-cancel {
   border: none;
   border-radius: 6px;
@@ -253,8 +216,6 @@
 .btn-cancel { background: #6c757d; color: #fff; }
 .btn-cancel:hover { background: #5a6268; }
 
-/* Table */
-/* Table */
 .table-container { overflow-x: auto; overflow-y: visible; min-height: 200px; }
 .table { width: 100%; border-collapse: collapse; font-family: Arial, sans-serif; min-height: 150px; }
 .table th, .table td { padding: 12px 16px; text-align: left; border-bottom: 1px solid #e0e0e0; min-width: 150px; }
@@ -263,7 +224,7 @@
 .table tbody { min-height: 100px; }
 .th-container { display: flex; align-items: center; justify-content: space-between; position: relative; min-width: 150px; }
 
-/* Filter Button */
+
 .filter-wrapper { position: relative; margin-left: 8px; z-index: 1000; }
 .filter-btn {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -329,7 +290,6 @@
   }
 }
 
-/* Dropdown */
 .filter-dropdown {
   position: absolute;
   top: 100%;
@@ -445,7 +405,6 @@
   box-shadow: 0 4px 8px rgba(255, 107, 107, 0.3);
 }
 
-/* Modal */
 .modal {
   position: fixed;
   top:0; left:0; right:0; bottom:0;
@@ -468,6 +427,6 @@
 .modal-content h3 { margin-top:0; }
 .modal-content label { display:block; margin-top:12px; }
 .modal-content input, .modal-content select { width:100%; padding:6px 10px; margin-top:4px; border-radius:4px; border:1px solid #ccc; }
-.form-buttons { margin-top:16px; display:flex; justify-content:flex-end; gap:8px; }
+.form-buttons { margin-top:16px; display:flex; justify-content:flex-end; gap:8px;}
 .error { color: red; margin-top: 8px; }
 </style>

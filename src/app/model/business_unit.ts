@@ -1,5 +1,5 @@
-export interface BU {
-  business_unit_id: string; // The correct ID from FastAPI
+export interface BusinessUnit {
+  business_unit_id: string; 
   business_unit_name: string;
   business_unit_head_id: string;
   business_unit_head_name: string;
@@ -16,7 +16,6 @@ export interface BU {
   entity_status: string;
 }
 
-
 export interface BusinessUnitUpdate {
   business_unit_id: string,  
   business_unit_name: string,
@@ -24,7 +23,6 @@ export interface BusinessUnitUpdate {
   business_unit_head_name: string,
   business_unit_description: string,
 }
-
 
 export interface BusinessUnitCreate {
   business_unit_id: string;

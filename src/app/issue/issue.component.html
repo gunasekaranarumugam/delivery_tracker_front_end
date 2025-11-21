@@ -1,22 +1,14 @@
 <app-page-header></app-page-header>
-
 <div class="layout">
   <app-sidebar></app-sidebar>
-
   <div class="content">
     <div class="card">
-      <!-- Card Header -->
       <div class="card-header">
         <h2>Issues</h2>
         <button class="btn-cancel" (click)="openAddForm()">+ Add New</button>
-
       </div>
-
-      <!-- Loading/Error -->
       <div *ngIf="loading()" class="loading">Loading Issues...</div>
       <div *ngIf="error()" class="error">Error: {{ error() }}</div>
-
-      <!-- Issues Table -->
       <div class="table-container" *ngIf="!loading()">
         <table class="table">
           <thead>
@@ -73,7 +65,7 @@
               <td>{{ issue.issue_status }}</td>
               <td>{{ issue.updated_at }}</td>
               <td>{{ issue.updated_by_name }}</td>
-              <td class="form-buttons">
+              <td>
                 <button class="btn-edit" (click)="openEditForm(issue)">Edit</button>
                 <button class="btn-delete" (click)="openDeletePopup(issue)">Archive</button>
               </td>
@@ -82,23 +74,38 @@
         </table>
       </div>
     </div>
-
-    <!-- Create Issue Modal -->
     <div class="modal" *ngIf="showForm && !editMode">
       <div class="modal-content">
         <h3>Add New Issue</h3>
         <form (ngSubmit)="saveIssue()" class="issue-form">
           <div class="form-row">
             <div class="form-column">
-              <label>Issue ID:</label>
-              <input type="text" [(ngModel)]="newIssue.issue_id" name="issue_id" required>
+             
+              <label>Business Unit:</label>
+              <select [(ngModel)]="newIssue.business_unit_id" name="business_unit_id" required>
+                <option value="">Select BU</option>
+                <option *ngFor="let bu of bus()" [value]="bu.business_unit_id">
+                  {{ bu.business_unit_name }}
+                </option>
+              </select>
 
               <label>Issue Title:</label>
               <input type="text" [(ngModel)]="newIssue.issue_title" name="issue_title" required>
 
+              <label>Project:</label>
+              <select [(ngModel)]="newIssue.project_id" name="project_id" required>
+                <option *ngFor="let proj of projects()" [value]="proj.project_id">
+                  {{ proj.project_name }}
+                </option>
+              </select>
 
-
-
+              <label>Deliverable:</label>
+              <select [(ngModel)]="newIssue.deliverable_id" name="deliverable_id" required>
+                <option value="" disabled>Select Deliverable</option>
+                <option *ngFor="let d of deliverables()" [value]="d.deliverable_id">
+                  {{ d.deliverable_name }}
+                </option>
+              </select>
 
               <label>Task:</label>
               <select [(ngModel)]="newIssue.task_id" name="task_id" required>
@@ -139,8 +146,6 @@
         </form>
       </div>
     </div>
-
-    <!-- Edit Issue Modal -->
     <div class="modal" *ngIf="showForm && editMode">
       <div class="modal-content">
         <h3>Edit Issue</h3>
@@ -150,28 +155,26 @@
               <label>Issue ID:</label>
               <input type="text" [(ngModel)]="newIssue.issue_id" name="issue_id" required disabled>
 
-             <label>BU :</label>
-              <select [(ngModel)]="newIssue.business_unit_name" name="business_unit_name" required>
-                <option *ngFor="let b of bus()" [value]="b.business_unit_name">{{ b.business_unit_name }}</option>
-
+              <label>BU :</label>
+              <select [(ngModel)]="newIssue.business_unit_id" name="business_unit_name" required disabled>
+                <option  *ngFor="let b of bus()" [value]="b.business_unit_id">{{ b.business_unit_name }}</option>
               </select>
-
 
               <label>Deliverable :</label>
-              <select [(ngModel)]="newIssue.deliverable_name" name="deliverable_name" required>
-                <option *ngFor="let d of deliverables()" [value]="d.deliverable_name">{{ d.deliverable_name }}</option>
+              <select [(ngModel)]="newIssue.deliverable_id" name="deliverable_name" required disabled>
+                <option *ngFor="let d of deliverables()" [value]="d.deliverable_id">{{ d.deliverable_name }}</option>
               </select>
 
-                <label>Project :</label>
-              <select [(ngModel)]="newIssue.project_name" name="project_name" required>
-                <option *ngFor="let p of projects()" [value]="p.project_name">{{ p.project_name }}</option>
+              <label>Project :</label>
+              <select [(ngModel)]="newIssue.project_id" name="project_name" required disabled>
+                <option *ngFor="let p of projects()" [value]="p.project_id">{{ p.project_name }}</option>
               </select>
 
               <label>Issue Title:</label>
               <input type="text" [(ngModel)]="newIssue.issue_title" name="issue_title" required>
 
               <label>Task:</label>
-              <select [(ngModel)]="newIssue.task_id" name="task_id" required>
+              <select [(ngModel)]="newIssue.task_id" name="task_id" required disabled>
                 <option *ngFor="let task of tasks()" [value]="task.task_id">{{ task.task_name }}</option>
               </select>
 
@@ -181,32 +184,26 @@
               </select>
             </div>
 
-               <label>Action Owner ID :</label>
-              <input type="text" [(ngModel)]="newIssue.action_owner_id" name="action_owner_id" required>
-
-
             <div class="form-column">
-              <label>Priority:</label>
-              <select [(ngModel)]="newIssue.issue_priority" name="issue_priority">
-                <option value="High">High</option>
-                <option value="Medium">Medium</option>
-                <option value="Low">Low</option>
-              </select>
+                <label>Priority:</label>
+                <select [(ngModel)]="newIssue.issue_priority" name="issue_priority">
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
 
+                <label>Status:</label>
+                <select [(ngModel)]="newIssue.issue_status" name="issue_status">
+                  <option value="Open">Open</option>
+                  <option value="In progress">In progress</option>
+                  <option value="Resolved">Resolved</option>
+                  <option value="Closed">Closed</option>
+                </select>
 
-              <label>Status:</label>
-              <select [(ngModel)]="newIssue.issue_status" name="issue_status">
-                <option value="Open">Open</option>
-                <option value="In progress">In progress</option>
-                <option value="Resolved">Resolved</option>
-                <option value="Closed">Closed</option>
-              </select>
-
-              <label>Description:</label>
-              <textarea [(ngModel)]="newIssue.issue_description" name="issue_description"></textarea>
+                <label>Description:</label>
+                <textarea [(ngModel)]="newIssue.issue_description" name="issue_description"></textarea>
             </div>
           </div>
-
           <div class="form-buttons">
             <button type="submit" class="btn-save">Update</button>
             <button type="button" class="btn-cancel" (click)="cancelForms()">Cancel</button>
@@ -214,8 +211,6 @@
         </form>
       </div>
     </div>
-
-    <!-- Delete Confirmation Modal -->
     <div class="modal" *ngIf="showDeletePopup">
       <div class="modal-content">
         <h3>Archive Issue</h3>
@@ -229,9 +224,7 @@
   </div>
 </div>
 
-
 <style>
-/* same as your previous CSS – fully compatible */
 .card { background: #fff; border-radius: 8px; box-shadow: 0 3px 12px rgba(0,0,0,0.08); padding: 16px; margin-bottom: 24px; }
 .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
 .card-header h2 { font-weight: 400; }

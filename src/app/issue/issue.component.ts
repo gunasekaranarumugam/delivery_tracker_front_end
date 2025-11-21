@@ -1,11 +1,11 @@
 import { Component, OnInit, inject, Signal } from '@angular/core';
 import { DataService } from '../data.service';
-import { Issue, IssueCreate, IssueUpdate } from '../model/Issue';
-import { Task } from '../model/Task';
-import { Employee } from '../model/Employee';
-import { Deliverable } from '../model/Deliverable';
-import { Project } from '../model/Project';
-import { BU } from '../model/bu';
+import { Issue, IssueCreate, IssueUpdate } from '../model/issue';
+import { Task } from '../model/task';
+import { Employee } from '../model/employee';
+import { Deliverable } from '../model/deliverable';
+import { Project } from '../model/project';
+import { BusinessUnit } from '../model/business_unit';
 import { AuthService } from '../auth/auth.service';
 
 @Component({
@@ -17,32 +17,27 @@ export class IssueComponent implements OnInit {
   private ds = inject(DataService);
   private auth = inject(AuthService);
 
-  // --- Signals from DataService ---
   issues: Signal<Issue[]> = this.ds.issues;
   projects: Signal<Project[]> = this.ds.projects;
   tasks: Signal<Task[]> = this.ds.tasks;
-  bus: Signal<BU[]> = this.ds.bu;
+  bus: Signal<BusinessUnit[]> = this.ds.bu;
   deliverables: Signal<Deliverable[]> = this.ds.deliverables;
   employees: Signal<Employee[]> = this.ds.employees;
   loading: Signal<boolean> = this.ds.issueLoading;
   error: Signal<string | null> = this.ds.issueError;
 
-  // --- Component UI State ---
   showForm = false;
   editMode = false;
   showDeletePopup = false;
   selectedIssue: Issue | null = null;
 
-  // --- Form Models ---
   newIssue: Partial<IssueCreate & IssueUpdate> = {};
 
-  // --- Columns for table & filters ---
   columns: (keyof Issue)[] = [
     'business_unit_name', 'project_name', 'deliverable_name', 'task_name',
     'issue_title', 'issue_description', 'action_owner_name', 'issue_priority',
     'issue_status', 'updated_at', 'updated_by_name'
   ];
-
 
   columnLabels: Record<string, string> = {
   business_unit_name: 'BU',
@@ -58,14 +53,13 @@ export class IssueComponent implements OnInit {
   updated_by_name: 'Updated By'
 };
 
-  // --- Filter Logic ---
   activeFilter: keyof Issue | null = null;
   selectedFilters: Partial<Record<keyof Issue, string[]>> = {};
 
+  private nextIssueId = 101;
+
   ngOnInit(): void {
-    this.ds.fetchIssues().subscribe(() => {
-      // this.applyDefaultFilters();
-    });
+    this.ds.fetchIssues().subscribe();
     this.ds.fetchTasks().subscribe();
     this.ds.fetchEmployees().subscribe();
     this.ds.fetchDeliverables().subscribe();
@@ -76,15 +70,19 @@ export class IssueComponent implements OnInit {
   applyDefaultFilters(): void {
     const user = this.auth.getAuthenticatedUser();
     if (user && user.employee_full_name) {
-      // Apply default filter for Action Owner column based on logged-in employee's full name
       this.selectedFilters['action_owner_name'] = [user.employee_full_name];
     }
-    
-    console.log('Applied default filters for Issue:', this.selectedFilters);
-    console.log('User details:', user);
   }
 
-  // --- Computed filtered list ---
+   getNextAvailableId(): string {
+    const allissues = this.issues(); 
+    if (!allissues.length) return '101'; 
+    const ids = allissues
+      .map(e => Number(e.issue_id))
+      .filter(n => !isNaN(n)); 
+    return (Math.max(...ids) + 1).toString();
+}
+
   get filteredIssues(): Issue[] {
     let list = this.issues();
     for (const key in this.selectedFilters) {
@@ -97,7 +95,6 @@ export class IssueComponent implements OnInit {
     return list;
   }
 
-  // --- Filter Helpers ---
   toggleFilter(column: keyof Issue) {
     this.activeFilter = this.activeFilter === column ? null : column;
   }
@@ -147,8 +144,6 @@ export class IssueComponent implements OnInit {
       k => this.selectedFilters[k as keyof Issue]?.length
     );
   }
-
-  // --- CRUD Methods ---
   openAddForm() {
     this.showForm = true;
     this.editMode = false;
@@ -163,6 +158,10 @@ export class IssueComponent implements OnInit {
     this.newIssue = {
       issue_id: issue.issue_id,
       task_id: issue.task_id,
+      business_unit_id: issue.business_unit_id,
+      deliverable_id: issue.deliverable_id,
+      project_id: issue.project_id,
+      business_unit_name: issue.business_unit_name,
       issue_title: issue.issue_title,
       issue_description: issue.issue_description,
       action_owner_id: issue.action_owner_id,
@@ -176,24 +175,23 @@ export class IssueComponent implements OnInit {
       console.error('Title, Task, and Action Owner are required.');
       return;
     }
-
     if (this.editMode && this.selectedIssue?.issue_id) {
       const payload: IssueUpdate = {
         issue_id: this.selectedIssue.issue_id,
-        task_id: this.newIssue.task_id!,
-        issue_title: this.newIssue.issue_title!,
+        task_id: this.newIssue.task_id,
+        issue_title: this.newIssue.issue_title,
         issue_description: this.newIssue.issue_description || '',
         action_owner_name: this.newIssue.action_owner_name || '',
         action_owner_id: this.newIssue.action_owner_id || '',
         issue_priority: this.newIssue.issue_priority || 'Medium',
         issue_status: this.newIssue.issue_status || 'Open',
-        business_unit_id: '',
+        business_unit_id: this.newIssue.business_unit_id,
         business_unit_name: this.newIssue.business_unit_name,
-        project_id: '',
-        project_name: '',
-        deliverable_id: '',
-        deliverable_name: '',
-        task_name: ''
+        project_id: this.newIssue.project_id,
+        project_name: this.newIssue.project_name,
+        deliverable_id: this.newIssue.deliverable_id,
+        deliverable_name: this.newIssue.deliverable_name,
+        task_name: this.newIssue.task_name!
       };
       this.ds.updateIssue(this.selectedIssue.issue_id, payload).subscribe({
         next: () => this.cancelForms(),
@@ -201,7 +199,7 @@ export class IssueComponent implements OnInit {
       });
     } else {
       const payload: IssueCreate = {
-        issue_id: '',
+        issue_id: this.getNextAvailableId(),
         task_id: this.newIssue.task_id!,
         issue_title: this.newIssue.issue_title!,
         issue_description: this.newIssue.issue_description || '',

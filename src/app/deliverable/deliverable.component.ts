@@ -1,9 +1,9 @@
 import { Component, OnInit, inject, Signal } from '@angular/core';
 import { DataService } from '../data.service';
-import { Deliverable, DeliverableCreate, DeliverableUpdate } from '../model/Deliverable';
-import { Project } from '../model/Project';
-import { Employee } from '../model/Employee';
-import { BU } from '../model/bu';
+import { Deliverable, DeliverableCreate, DeliverableUpdate } from '../model/deliverable';
+import { Project } from '../model/project';
+import { Employee } from '../model/employee';
+import { BusinessUnit } from '../model/business_unit';
 import { AuthService } from '../auth/auth.service';
 
 @Component({
@@ -15,30 +15,31 @@ export class DeliverableComponent implements OnInit {
   private ds = inject(DataService);
   private auth = inject(AuthService);
 
-  // --- Signals from DataService ---
   deliverableItems: Signal<Deliverable[]> = this.ds.deliverables;
   deliverableLoading: Signal<boolean> = this.ds.deliverableLoading;
   deliverableError: Signal<string | null> = this.ds.deliverableError;
   projects: Signal<Project[]> = this.ds.projects;
   employees: Signal<Employee[]> = this.ds.employees;
-  businessUnits: Signal<BU[]> = this.ds.bu;
+  businessUnits: Signal<BusinessUnit[]> = this.ds.bu;
 
-  // --- Component State ---
   showCreateForm = false;
   showEditForm = false;
   showDeletePopup = false;
 
   selectedDeliverable: Deliverable | null = null;
 
-  // --- Form Models ---
+  private nextDeliverableId = 101;
+
   newDeliverable: Partial<DeliverableCreate> = {
-    deliverable_id: '',
+    deliverable_id: this.getNextAvailableId(),
     project_id: '',
     deliverable_name: '',
     deliverable_description: '',
     priority: '',
-    baseline_start_date: '',
-    baseline_end_date: ''
+    planned_start_date:'',
+    planned_end_date: '',
+    baseline_start_date:'',
+    baseline_end_date:'',
   };
 
   editDeliverableModel: DeliverableUpdate = {
@@ -56,12 +57,11 @@ export class DeliverableComponent implements OnInit {
     planned_start_date: '',
     planned_end_date: '',
     baseline_start_date: '',
-    baseline_end_date: ''
+    baseline_end_date: '',
   };
 
   editingDeliverableId: string | null = null;
 
-  // --- Columns for table & filters ---
   columns: (keyof Deliverable)[] = [
     'business_unit_name',
     'project_name',
@@ -84,16 +84,11 @@ export class DeliverableComponent implements OnInit {
   updated_by_name: 'Updated By'
 };
 
-
-
-  // --- Filter logic ---
   activeFilter: keyof Deliverable | null = null;
   selectedFilters: Partial<Record<keyof Deliverable, string[]>> = {};
 
   ngOnInit(): void {
-    this.ds.fetchDeliverables().subscribe(() => {
-      // this.applyDefaultFilters();
-    });
+    this.ds.fetchDeliverables().subscribe();
     this.ds.fetchProjects().subscribe();
     this.ds.fetchBU().subscribe();
     this.ds.fetchEmployees().subscribe();
@@ -102,15 +97,10 @@ export class DeliverableComponent implements OnInit {
   applyDefaultFilters(): void {
     const user = this.auth.getAuthenticatedUser();
     if (user && user.employee_full_name) {
-      // Apply default filter for Delivery Manager column based on logged-in employee's full name
       this.selectedFilters['delivery_manager_name'] = [user.employee_full_name];
     }
-    
-    console.log('Applied default filters for Deliverable:', this.selectedFilters);
-    console.log('User details:', user);
   }
 
-  // --- Computed filtered list ---
   get filteredDeliverables(): Deliverable[] {
     let list = this.deliverableItems();
     for (const key in this.selectedFilters) {
@@ -123,7 +113,6 @@ export class DeliverableComponent implements OnInit {
     return list;
   }
 
-  // --- Filter Helpers ---
   toggleFilter(column: keyof Deliverable) {
     this.activeFilter = this.activeFilter === column ? null : column;
   }
@@ -153,6 +142,15 @@ export class DeliverableComponent implements OnInit {
     this.selectedFilters = {};
   }
 
+  getNextAvailableId(): string {
+    const alldeliverables = this.deliverableItems(); 
+    if (!alldeliverables) return '101';
+    const ids = alldeliverables
+      .map(e => Number(e.deliverable_id))
+      .filter(n => !isNaN(n)); 
+    return (Math.max(...ids) + 1).toString();
+}
+
   clearFilter(column: keyof Deliverable, event?: Event) {
     if (event) {
       event.stopPropagation();
@@ -175,9 +173,6 @@ export class DeliverableComponent implements OnInit {
     return this.selectedFilters[column]?.length ?? 0;
   }
 
-  // --- CRUD Methods ---
-
-  // --- CREATE FORM ---
   openCreateForm(): void {
     this.showCreateForm = true;
     this.showEditForm = false;
@@ -187,19 +182,24 @@ export class DeliverableComponent implements OnInit {
       deliverable_name: '',
       deliverable_description: '',
       priority: '',
-      baseline_start_date: '',
-      baseline_end_date: ''
+      baseline_start_date:'',
+      baseline_end_date: '',
+      planned_start_date:'',
+      planned_end_date:'',
     };
   }
 
   saveNewDeliverable(): void {
+    this.newDeliverable.baseline_start_date = this.newDeliverable.planned_start_date;
+    this.newDeliverable.baseline_end_date = this.newDeliverable.planned_end_date;
+    this.nextDeliverableId++;
+    this.newDeliverable.deliverable_id = this.nextDeliverableId.toString();
     this.ds.createDeliverable(this.newDeliverable).subscribe({
       next: () => this.cancelForms(),
       error: (err) => console.error('Creation failed:', err)
     });
   }
 
-  // --- EDIT FORM ---
   openEditForm(d: Deliverable): void {
     this.showEditForm = true;
     this.showCreateForm = false;
@@ -232,7 +232,6 @@ export class DeliverableComponent implements OnInit {
     });
   }
 
-  // --- DELETE ---
   openDeletePopup(d: Deliverable): void {
     this.selectedDeliverable = d;
     this.showDeletePopup = true;
@@ -246,8 +245,7 @@ export class DeliverableComponent implements OnInit {
       });
     }
   }
-
-  // --- CANCEL ---
+  
   cancelForms(): void {
     this.showCreateForm = false;
     this.showEditForm = false;

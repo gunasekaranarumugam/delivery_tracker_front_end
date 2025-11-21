@@ -1,32 +1,31 @@
 import { Component, OnInit, inject, Signal } from '@angular/core';
 import { DataService } from '../data.service';
-import { BU, BusinessUnitCreate, BusinessUnitUpdate } from '../model/bu';
-import { Employee } from 'src/app/model/Employee';
+import { BusinessUnit, BusinessUnitCreate, BusinessUnitUpdate } from '../model/business_unit';
+import { Employee } from 'src/app/model/employee';
 import { AuthService } from 'src/app/auth/auth.service';
 
 @Component({
   selector: 'app-businessunit',
-  templateUrl: './businessunit.component.html',
-  styleUrls: ['./businessunit.component.scss'],
+  templateUrl: './business_unit.component.html',
+  styleUrls: ['./business_unit.component.scss'],
 })
 export class BusinessUnitComponent implements OnInit {
   private ds = inject(DataService);
   private auth = inject(AuthService);
 
-  // --- Signals from DataService ---
-  buItems: Signal<BU[]> = this.ds.bu;
+  buItems: Signal<BusinessUnit[]> = this.ds.bu;
   buLoading: Signal<boolean> = this.ds.buLoading;
   buError: Signal<string | null> = this.ds.buError;
   employees: Signal<Employee[]> = this.ds.employees;
 
-  // --- Component State ---
   showCreateForm = false;
   showEditForm = false;
   showDeletePopup = false;
 
-  selectedBU: BU | null = null;
+  selectedBU: BusinessUnit | null = null;
 
-  // --- Form Models ---
+  private nextBUId = 101;
+
   newBU: BusinessUnitCreate = {
     business_unit_id: '',
     business_unit_name: '',
@@ -44,8 +43,7 @@ export class BusinessUnitComponent implements OnInit {
 
   editingBUId: string | null = null;
 
-  // --- Columns for table & filters ---
-  columns: (keyof BU)[] = [
+  columns: (keyof BusinessUnit)[] = [
     'business_unit_name',
     'business_unit_head_name',
     'business_unit_description',
@@ -61,34 +59,25 @@ export class BusinessUnitComponent implements OnInit {
   updated_by_name: 'Updated By'
 };
 
-
-  // --- Filter logic ---
-  activeFilter: keyof BU | null = null;
-  selectedFilters: Partial<Record<keyof BU, string[]>> = {};
+  activeFilter: keyof BusinessUnit | null = null;
+  selectedFilters: Partial<Record<keyof BusinessUnit, string[]>> = {};
 
   ngOnInit(): void {
-    this.ds.fetchBU().subscribe(() => {
-      // this.applyDefaultFilters();
-    });
+    this.ds.fetchBU().subscribe();
     this.ds.fetchEmployees().subscribe();
   }
 
   applyDefaultFilters(): void {
     const user = this.auth.getAuthenticatedUser();
     if (user && user.employee_full_name) {
-      // Apply default filter for BU Head column based on logged-in employee's full name
       this.selectedFilters['business_unit_head_name'] = [user.employee_full_name];
     }
-    
-    console.log('Applied default filters for BU:', this.selectedFilters);
-    console.log('User details:', user);
   }
 
-  // --- Computed filtered list ---
-  get filteredBUs(): BU[] {
+  get filteredBUs(): BusinessUnit[] {
     let list = this.buItems();
     for (const key in this.selectedFilters) {
-      const k = key as keyof BU;
+      const k = key as keyof BusinessUnit;
       const values = this.selectedFilters[k];
       if (values && values.length) {
         list = list.filter((bu) => values.includes(bu[k]!));
@@ -97,21 +86,20 @@ export class BusinessUnitComponent implements OnInit {
     return list;
   }
 
-  // --- Filter Helpers ---
-  toggleFilter(column: keyof BU) {
+  toggleFilter(column: keyof BusinessUnit) {
     this.activeFilter = this.activeFilter === column ? null : column;
   }
 
-  getUniqueOptions(column: keyof BU): string[] {
+  getUniqueOptions(column: keyof BusinessUnit): string[] {
     const values = this.buItems().map((bu) => bu[column] || '');
     return Array.from(new Set(values));
   }
 
-  isSelected(column: keyof BU, value: string): boolean {
+  isSelected(column: keyof BusinessUnit, value: string): boolean {
     return this.selectedFilters[column]?.includes(value) ?? false;
   }
 
-  toggleSelection(column: keyof BU, value: string) {
+  toggleSelection(column: keyof BusinessUnit, value: string) {
     if (!this.selectedFilters[column]) this.selectedFilters[column] = [];
 
     const idx = this.selectedFilters[column]!.indexOf(value);
@@ -127,7 +115,7 @@ export class BusinessUnitComponent implements OnInit {
     this.selectedFilters = {};
   }
 
-  clearFilter(column: keyof BU, event?: Event) {
+  clearFilter(column: keyof BusinessUnit, event?: Event) {
     if (event) {
       event.stopPropagation();
     }
@@ -135,43 +123,49 @@ export class BusinessUnitComponent implements OnInit {
     this.activeFilter = null;
   }
 
-  hasFilter(column: keyof BU): boolean {
+  hasFilter(column: keyof BusinessUnit): boolean {
     return !!(this.selectedFilters[column] && this.selectedFilters[column]!.length > 0);
   }
 
-  getFilterCount(column: keyof BU): number {
+  getFilterCount(column: keyof BusinessUnit): number {
     return this.selectedFilters[column]?.length || 0;
   }
 
   get hasActiveFilters(): boolean {
     return Object.keys(this.selectedFilters).some(
-      (k) => this.selectedFilters[k as keyof BU]?.length
+      (k) => this.selectedFilters[k as keyof BusinessUnit]?.length
     );
   }
 
-  // --- CRUD Methods ---
-
-  // --- CREATE FORM ---
   openCreateForm(): void {
     this.showCreateForm = true;
     this.showEditForm = false;
     this.newBU = {
-      business_unit_id: '',
+      business_unit_id: this.getNextAvailableId(),
       business_unit_name: '',
       business_unit_description: '',
       business_unit_head_id: '',
     };
   }
 
-  saveNewBU(): void {
+  getNextAvailableId(): string {
+    const allBUs = this.buItems(); 
+    if (!allBUs.length) return '101'; 
+    const ids = allBUs
+      .map(e => Number(e.business_unit_id))
+      .filter(n => !isNaN(n)); 
+    return (Math.max(...ids) + 1).toString();
+}
+
+saveNewBU(): void {
     this.ds.createBU(this.newBU).subscribe({
       next: () => this.cancelForms(),
       error: (err) => console.error('Creation failed:', err),
     });
   }
 
-  // --- EDIT FORM ---
-  openEditForm(bu: BU): void {
+ 
+openEditForm(bu: BusinessUnit): void {
     this.showEditForm = true;
     this.showCreateForm = false;
     this.editingBUId = bu.business_unit_id;
@@ -184,7 +178,7 @@ export class BusinessUnitComponent implements OnInit {
     };
   }
 
-  saveEditBU(): void {
+saveEditBU(): void {
     if (!this.editingBUId) return;
 
     this.ds.updateBU(this.editingBUId, this.editBUModel).subscribe({
@@ -193,8 +187,7 @@ export class BusinessUnitComponent implements OnInit {
     });
   }
 
-  // --- DELETE ---
-  openDeletePopup(bu: BU): void {
+  openDeletePopup(bu: BusinessUnit): void {
     this.selectedBU = bu;
     this.showDeletePopup = true;
   }
@@ -207,8 +200,7 @@ export class BusinessUnitComponent implements OnInit {
       });
     }
   }
-
-  // --- CANCEL ---
+  
   cancelForms(): void {
     this.showCreateForm = false;
     this.showEditForm = false;

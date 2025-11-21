@@ -1,7 +1,7 @@
 import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import {LoginComponent} from "./auth/login/login.component";
-import {BusinessUnitComponent} from "./businessunit/businessunit.component";
+import {BusinessUnitComponent} from "./business_unit/business_unit.component";
 import {EmployeeComponent} from "./employee/employee.component";
 import {ProjectComponent} from "./project/project.component";
 import {DeliverableComponent} from "./deliverable/deliverable.component";

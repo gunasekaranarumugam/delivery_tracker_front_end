@@ -1,4 +1,3 @@
-// Full Deliverable interface
 export interface Deliverable {
     business_unit_id: string
     business_unit_name: string
@@ -25,8 +24,8 @@ export interface Deliverable {
     entity_status: string
 }
 
-// Interface for creating a new deliverable
 export interface DeliverableCreate {
+  business_unit_id?:string;
   deliverable_id?: string;
   project_id?: string;
   deliverable_name?: string;
@@ -36,7 +35,6 @@ export interface DeliverableCreate {
   planned_end_date?:string;
   baseline_start_date?: string;
   baseline_end_date?:string;
- 
 }
 
 export interface DeliverableUpdate {
@@ -58,19 +56,7 @@ export interface DeliverableUpdate {
 
 }
 
-// Interface for patch/update (partial updates)
-/**
- * Defines the structure for a Deliverable PATCH request body.
- * All fields are optional because PATCH is used for partial updates.
- * Server-managed metadata (e.g., created_at, created_by) is excluded.
- */
 export interface DeliverablePatch {
-    
-
-    // Status (Used for soft-delete/archive operations)
-    entity_status?: string;
-    
-    // Note: deliverable_id and project_id are typically not changed via PATCH.
-    // deliverable_id is often passed in the URL (e.g., /api/Deliverables/{id}).
+   entity_status?: string;
 }
 

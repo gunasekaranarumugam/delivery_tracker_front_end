@@ -1,4 +1,3 @@
-// Full Task interface (No change needed)
 export interface Task {
     business_unit_id: string
     business_unit_name: string
@@ -34,34 +33,24 @@ export interface Task {
     entity_status: string
 }
 
-// Interface for creating a new Task (Input for POST)
-// Correctly omits server-generated fields like task_id, created_at, entity_status.
-// TaskCreate.ts (Update this file)
-
 export interface TaskCreate {
   task_id:string;
-  deliverable_id: string; // Used to be deliverableId
-  task_type_id: string;  // Used to be taskType
-  task_name: string;     // Used to be taskTitle
-  task_description?: string; // Used to be taskDescription
-  assignee_id?: string;   // Used to be assignee
-  reviewer_id?: string;   // Used to be reviewer
+  deliverable_id?: string;
+  task_type_id: string;  
+  task_name: string;    
+  task_description?: string;
+  assignee_id?: string;   
+  reviewer_id?: string;   
   priority?: string;
-  task_type_name?:string;
-  // REQUIRED FIELDS ADDED/CORRECTED:
-  baseline_start_date?: string; // ADDED
-  baseline_end_date?: string;   // ADDED
-  planned_start_date?: string;  // Used to be planStartDate
-  planned_end_date?: string;    // Used to be planEndDate
-  effort_estimated_in_hours?:string; // Used to be estimateHours
+  task_type_name:string;
+  project_id?:string;
+  business_unit_id?:string;
+  baseline_start_date?: string;
+  baseline_end_date?: string;   
+  planned_start_date?: string; 
+  planned_end_date?: string;    
+  effort_estimated_in_hours?:string; 
 }
-
-// --- CORRECTED PATCH INTERFACE ---
-
-// Interface for patch/update (partial updates via PATCH verb).
-// It makes ALL fields from TaskCreate optional, allowing the client to send
-// any combination of fields to update.
-// We also explicitly include entity_status as it is a common field to patch.
 
 export interface TaskUpdate {
   assignee_id?:string;
@@ -79,7 +68,7 @@ export interface TaskUpdate {
   task_type_id:string;
   task_type_name:string;
   task_id:string;
-  task_name:string;
+  task_name?:string;
   task_description:string;
   assignee_name?:string;
   reviewer_name?:string;
@@ -89,12 +78,8 @@ export interface TaskUpdate {
   baseline_start_date:string;
   baseline_end_date:string;
   effort_estimated_in_hours:string;
-  
-}
-export interface TaskPatch  {
-  // Adding mutable system/status fields explicitly
-  entity_status: string;
 }
 
-// Alternatively, for maximum flexibility:
-// export type TaskPatch = Partial<Task>;
+export interface TaskPatch  {
+  entity_status: string;
+}
