@@ -16,7 +16,7 @@ import { Timesheet, TimesheetCreate, TimesheetPatch } from './model/timesheet';
 
 export class DataService {
   private http = inject(HttpClient);
-  private apiUrl = "http://delivery-tracker-developmentalb-762815170.ap-south-1.elb.amazonaws.com";
+  private apiUrl = "http://delivery-tracker-main-alb-905400589.ap-south-1.elb.amazonaws.com";
   private timesheetApiUrl = `${this.apiUrl}/api/TaskStatus/`;
   private buLoaded = false;
   private employeesLoaded = false;
